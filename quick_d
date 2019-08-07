@@ -1,0 +1,72 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Mar 15 15:50:19 2019
+
+@author: shilu
+"""
+
+import numpy as np
+from functions import Linear
+np.set_printoptions(precision=4)
+
+
+#i = 2
+#
+#n= 2**i+1
+#
+## Find the spacing
+#h=1/float(n-1)
+#
+## Set the mesh grid, that is interior
+##x1, y1 = np.meshgrid(np.arange(h, 1, h), np.arange(h, 1, h))
+#x1, y1 = np.meshgrid(np.arange(0, 1+h, h), np.arange(0, 1+h, h))
+#
+#nodes = np.vstack([x1.ravel(), y1.ravel()]).T
+#
+#
+#
+## Set up data
+#x = np.linspace(0, 1.0,20)
+#y = np.linspace(0, 1.0,20)
+#X, Y = np.meshgrid(x,y)
+#
+#data = Linear(X,Y)
+#data = data.flatten()
+#
+#coordx = X.flatten()
+#coordy = Y.flatten()
+#Coord = zip(coordx, coordy)
+
+
+def Polynomial_eval(node1, node2, node3, data_coord):
+    
+    from math import fabs
+    #print data_coord
+    x1 = node1[0]
+    y1 = node1[1]
+    x2 = node2[0]
+    y2 = node2[1]
+    x3 = node3[0]
+    y3 = node3[1]
+    
+    division = (y1-y2)*(x2-x3)-(y2-y3)*(x1-x2);
+    #print division
+    
+    
+    assert fabs(division) > 1.0E-12, "divide by zero"
+    
+    const = (x3*y2 - y3*x2)/float(division)
+    xcoe = (y3-y2)/float(division)
+    ycoe = (x2-x3)/float(division)
+    
+    return data_coord[0]*xcoe+data_coord[1]*ycoe+const
+
+
+def In_triangle(node1, node2, node3, data_coord):
+    
+    value1 = Polynomial_eval(node1, node2, node3, data_coord)
+    value2 = Polynomial_eval(node2, node1, node3, data_coord)
+    value3 = Polynomial_eval(node3, node2, node1, data_coord)
+    
+    return  (value1 >=0.0 and value2>=0.0 and value3 >=0.0)
