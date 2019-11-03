@@ -7,36 +7,36 @@ Created on Fri Mar 15 15:50:19 2019
 """
 import time 
 import numpy as np
-from functions import Linear
+from functions import Linear, Linear2x
 np.set_printoptions(precision=4)
 
 
-#i = 5
-#
-#n= 2**i+1
-#
-## Find the spacing
-#h=1/float(n-1)
-#
-## Set the mesh grid, that is interior
-##x1, y1 = np.meshgrid(np.arange(h, 1, h), np.arange(h, 1, h))
-#x1, y1 = np.meshgrid(np.arange(0, 1+h, h), np.arange(0, 1+h, h))
-#
-#nodes = np.vstack([x1.ravel(), y1.ravel()]).T
-#
-#
-#
-## Set up data
-#x = np.linspace(0, 1.0,20)
-#y = np.linspace(0, 1.0,20)
-#X, Y = np.meshgrid(x,y)
-#
-#data = Linear(X,Y)
-#data = data.flatten()
-#
-#coordx = X.flatten()
-#coordy = Y.flatten()
-#Coord = zip(coordx, coordy)
+i = 2
+
+n= 2**i+1
+
+# Find the spacing
+h=1/float(n-1)
+
+# Set the mesh grid, that is interior
+#x1, y1 = np.meshgrid(np.arange(h, 1, h), np.arange(h, 1, h))
+x1, y1 = np.meshgrid(np.arange(0, 1+h, h), np.arange(0, 1+h, h))
+
+nodes = np.vstack([x1.ravel(), y1.ravel()]).T
+
+
+
+# Set up data
+x = np.linspace(0, 1.0,100)
+y = np.linspace(0, 1.0,100)
+X, Y = np.meshgrid(x,y)
+
+data = Linear2x(X,Y)
+data = data.flatten()
+
+coordx = X.flatten()
+coordy = Y.flatten()
+Coord = zip(coordx, coordy)
 
 
 def Polynomial_eval(node1, node2, node3, data_coord):
@@ -56,9 +56,9 @@ def Polynomial_eval(node1, node2, node3, data_coord):
     
     assert fabs(division) > 1.0E-12, "divide by zero"
     
-    const = (x3*y2 - y3*x2)/float(division)
-    xcoe = (y3-y2)/float(division)
-    ycoe = (x2-x3)/float(division)
+    const = (x3*y2 - y3*x2)/division
+    xcoe = (y3-y2)/division
+    ycoe = (x2-x3)/division
     
     return data_coord[0]*xcoe+data_coord[1]*ycoe+const
 
@@ -74,12 +74,15 @@ def In_triangle(node1, node2, node3, data_coord):
 
 def  dvector(Coord, data, nodes,n):
     
+    np.set_printoptions(precision=16)
     from scipy import zeros
     from copy import copy
     # initilise the dvector.
     qdvector = zeros([(n)**2,1])
     
     for i in range(len(Coord)):
+        
+        print Coord[i]
         
         data_i = data[i]
         data_coord = Coord[i]
@@ -89,7 +92,7 @@ def  dvector(Coord, data, nodes,n):
         
         difference = Coord[i] - nodes
         
-        #print difference, 'difference'
+        
         
         distance = difference[:,0]**2 +difference[:,1]**2
         
@@ -108,13 +111,14 @@ def  dvector(Coord, data, nodes,n):
         
         
         # Find the closest node
-        #  the index of third smallest distance 
+        #  the index of  smallest distance 
         node1 = node_list[distance.index(sorted(distance)[0])]
+        print node1, 'node1'
         #print distance.index(sorted(distance)[0]), node1, 'node1'
         
         
         
-        
+        # The index of cloest node
         IDi = node_list.index(node1)
         #print IDi, 'IDi'
         
@@ -122,6 +126,7 @@ def  dvector(Coord, data, nodes,n):
         
         # Find the index of second smallest distance
         node2 = node_list[distance.index(sorted(distance)[1])]
+        print node2, 'node2'
         
         index2 = distance.index(sorted(distance)[1])
         #print distance.index(sorted(distance)[1]), node2, 'node2'
@@ -129,8 +134,9 @@ def  dvector(Coord, data, nodes,n):
         IDj = node_list.index(node2)
         #print IDj, 'IDj'
         
-        
-        distance[index2] = distance[index2]+2
+        # In case the seond and the third node have the same distance to the coordinate
+        # And the second one had been picked up again to be the third.
+        distance[index2] = distance[index2]+3
         
         
         
@@ -143,25 +149,30 @@ def  dvector(Coord, data, nodes,n):
         #node_list_2.remove(node2)
         node3 = node_list[distance.index(sorted(distance)[1])]
         #print distance.index(sorted(distance)[1]), node3, 'node3'
+        print node3, 'node3'
         
         IDk = node_list.index(node3)
         #print IDk, 'IDk'
         
         #print node1, node2, node3, Coord[i]
         
-        qdvector[IDi,0] += Polynomial_eval(node1, node2, node3, data_coord)* data_i
+        if In_triangle(node1, node2, node3, Coord[i]):
+            print node1, node2, node3
         
-        qdvector[IDj,0] += Polynomial_eval(node2, node1, node3, data_coord)* data_i
-        
-        qdvector[IDk,0] += Polynomial_eval(node3, node1, node2, data_coord)* data_i
+            qdvector[IDi,0] += Polynomial_eval(node1, node2, node3, data_coord)* data_i
+            
+            qdvector[IDj,0] += Polynomial_eval(node2, node1, node3, data_coord)* data_i
+            
+            qdvector[IDk,0] += Polynomial_eval(node3, node1, node2, data_coord)* data_i
         
         
     return qdvector
 
 #start = time.time()
-#qdvector =dvector(Coord, data, nodes, n)/float(len(Coord))
+fast_rhs =dvector(Coord, data, nodes, n)/float(len(Coord))
 #
-#qdvector = np.reshape(qdvector, (n,n))[1:-1,1:-1]
+fast_rhs = np.reshape(fast_rhs, (n,n))[1:-1,1:-1]
+fast_rhs= np.reshape(fast_rhs, ((n-2)**2,1))
 #done = time.time()
 #elapsed = done - start
 #print elapsed

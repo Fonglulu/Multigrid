@@ -1,8 +1,5 @@
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
 """
 Created on Sat Nov 10 12:09:26 2018
-
 @author: shilu
 """
 
@@ -49,7 +46,7 @@ def VCycle(u,rhs,  s1, s2, alpha):
         
         for sweeps in range(s1):
             
-            smoother_plot(u)
+
             u = Rich(u, rhs, alpha)
    
         
@@ -260,7 +257,7 @@ def Ultimate_MG(cyclenumber, i, alpha, matrix_type):
 
 
     # Set the number of relaxation
-    s1=5
+    s1=6
     s2=1
 
     #Initialise a list to record l2 norm of resudual 

@@ -21,7 +21,7 @@ import math
 from grid.Grid import Grid
 from BuildSquare import build_square_grid
 from BuildEquation import build_equation_linear_2D, set_polynomial_linear_2D,\
-Poisson_tri_integrate, TPS_tri_intergrateX, TPS_tri_intergrateY, NIn_triangle, build_matrix_fem_2D
+Poisson_tri_integrate, TPS_tri_intergrateX, TPS_tri_intergrateY, In_triangle, build_matrix_fem_2D
 
 from Triangle import triangle_iterator, Interior_triangle_iterator
 from grid.NodeTable import node_iterator, not_slave_node
@@ -38,7 +38,7 @@ from operator import itemgetter
 from copy import copy
 
 
-alpha = 1e-7
+alpha = 1e-8
 
 
 
@@ -107,7 +107,7 @@ def Ysin(x,y):
     
     return pi*cos(pi*y)*sin(pi*x)
 
-def XYsin(x,y):
+def XYsin(x,y): 
     
     return -(alpha *pi*pi* cos(pi*x)*cos(pi*y))
 
@@ -172,22 +172,13 @@ def XYcos2(x,y):
 #bone  = np.loadtxt(r"/Users/shilu/Desktop/SPline/FEM_tut_coding/triangle/bone.txt")
 
 #Create grid and multivariate normal
-x = np.linspace(0, 1.0,20)
-y = np.linspace(0, 1.0,20)
+x = np.linspace(0, 1.0,30)
+y = np.linspace(0, 1.0,30)
 
 X, Y = np.meshgrid(x,y)
 
-Z2 = Linear_x(X,Y)
+Z2 = Exy(X,Y)
 
-##Make a 3D plot
-#fig = plt.figure()
-#ax = fig.gca(projection='3d')
-#ax.plot_surface(X, Y, Z2,cmap='viridis',linewidth=0)
-#ax.set_xlabel('X axis')
-#ax.set_ylabel('Y axis')
-#ax.set_zlabel('Z axis')
-#plt.show()
-##
 
 data = Z2.flatten()
 coordx = X.flatten()
@@ -206,7 +197,7 @@ Coord = zip(coordx, coordy)
 grid = Grid()
 #
 ## Build a 9*9 grid
-i =3
+i =4
 n = 2**i+1
 
 h =1/float(n-1)
@@ -217,13 +208,13 @@ true_soln = zero
 #
 
 # Boundares
-Crhs = Linear_x
+Crhs = Exy
 #
-g1rhs = Xlinear_x
+g1rhs = Xexy
 #
-g2rhs = Ylinear_x
+g2rhs = Yexy
 #
-wrhs = Zero
+wrhs = XYexy
 #
 #
 #
@@ -274,7 +265,7 @@ def Amatrix(grid):
     for node in Nl:
         node.set_value(Nl.index(node))
             
-    Amatrix = csr_matrix((len(Nl), len(Nl)))
+    Amatrix = lil_matrix((len(Nl), len(Nl)))
     
     for node in node_iterator(grid):
         
@@ -354,6 +345,7 @@ def h1(grid, Crhs, wrhs):
                     c = Crhs(coord[0], coord[1])
                     
                     w = wrhs(coord[0], coord[1])
+                    
 
                     
 
@@ -435,8 +427,9 @@ def h2(grid, g1rhs, wrhs, alpha):
                     #print g1
                     
                     w = wrhs(coord[0], coord[1])
+                   
                     
-                    print  #w
+                   
                     
                     #print endpt._id_no
             
@@ -448,7 +441,7 @@ def h2(grid, g1rhs, wrhs, alpha):
             
                     #h2[i] += alpha * g1 * lentry - w * g1entry #G1, G2
                     h2[i] += alpha * g1 * lentry +w * g1entry # -G1, -G2
-                    
+                   
     return h2
 
 
@@ -495,9 +488,10 @@ def h3(grid, g2rhs, wrhs, alpha):
                     coord = grid.get_coord(endpt)
             
                     g2 = g2rhs(coord[0], coord[1])
+                
                     
                     w = wrhs(coord[0], coord[1])
-                    
+                   
                     #print c, w
                     
                     #print endpt._id_no
@@ -511,6 +505,7 @@ def h3(grid, g2rhs, wrhs, alpha):
                     
                     #h3[i] += alpha * g2* lentry - w* g2entry # G1, G2
                     h3[i] += alpha * g2* lentry + w* g2entry  # -G1, -G2
+       
                     
     return h3
 
@@ -602,7 +597,7 @@ def Lmatrix(grid):
 #    
     
     
-    Lmatrix = csr_matrix((len(Nl), len(Nl)))
+    Lmatrix = lil_matrix((len(Nl), len(Nl)))
     
     for node in node_iterator(grid):
     
@@ -648,7 +643,7 @@ def G1(grid):
     
     
     
-    G1 = csr_matrix((len(Nl), len(Nl)))
+    G1 = lil_matrix((len(Nl), len(Nl)))
     
     for node in node_iterator(grid):
     
@@ -693,7 +688,7 @@ def G2(grid):
         
         node.set_value(Nl.index(node))
 
-    G2 = csr_matrix((len(Nl), len(Nl)))
+    G2 = lil_matrix((len(Nl), len(Nl)))
     
     for node in node_iterator(grid):
     
@@ -756,22 +751,24 @@ def dvector(grid, data):
             basis1 = set_polynomial_linear_2D(tri[0], tri[2], tri[1])
             
             Idi = int(tri[0].get_value())
-            
+       
             
             for i in range(len(Coord)):
                 
                 
-                if NIn_triangle(tri[0] , tri[1], tri[2], Coord[i]):
+                if In_triangle(tri[0] , tri[1], tri[2], Coord[i]):
                     
                         
-                        
+                       
+                            
+                          
                         dvector[Idi,0] += basis1.eval(Coord[i][0], Coord[i][1]) * data[i]
                         
-                        
+                    
                     
     return dvector/float(len(Coord))
 #
-dvector = dvector(grid, data)
+dv = dvector(grid, data)
 
 
 #dvector1 = dvector - h1
@@ -788,12 +785,12 @@ def Lets_Make_the_Damn_Big_Matrix():
     
     Nl=[node[0] for node in Nl]
     
-    ZeroMatrix = csr_matrix((len(Nl),len(Nl)))
+
     
-    BigMat = bmat([[Amatrix, ZeroMatrix, ZeroMatrix, Lmatrix],\
-                       [ZeroMatrix, alpha*Lmatrix, ZeroMatrix, -G1.T],\
-                       [ZeroMatrix, ZeroMatrix, alpha*Lmatrix,  -G2.T],\
-                       [Lmatrix, -G1, -G2, ZeroMatrix]])
+    BigMat = bmat([[Amatrix, None, None, math.sqrt(alpha)*Lmatrix],\
+                       [None, Lmatrix, None, -G1.T],\
+                       [None, None,  Lmatrix,  -G2.T],\
+                       [math.sqrt(alpha)*Lmatrix, -G1, -G2, None]])
     return BigMat
     
 BigMat = Lets_Make_the_Damn_Big_Matrix()
@@ -810,10 +807,17 @@ BigMat = Lets_Make_the_Damn_Big_Matrix()
 #plt.plot(x_a,vmin)
 
 one = zeros((4*len(Nl),1))
-one[0:len(Nl)]=dvector-h1
-one[len(Nl):2*len(Nl)]=-h2
-one[2*len(Nl):3*len(Nl)]=-h3
-one[3*len(Nl):4*len(Nl)]=-h4
+one[0:len(Nl)]=dv-h1
+one[len(Nl):2*len(Nl)]=-h2/float(math.sqrt(alpha))
+one[2*len(Nl):3*len(Nl)]=-h3/float(math.sqrt(alpha))
+one[3*len(Nl):4*len(Nl)]=-h4*math.sqrt(alpha)
+
+d = zeros((4*len(Nl),1))
+d[0:len(Nl)]=dv
+d[len(Nl):2*len(Nl)]=-h2
+d[2*len(Nl):3*len(Nl)]=-h3
+d[3*len(Nl):4*len(Nl)]=-h4
+d = np.reshape(d,(4,int(math.sqrt(len(Nl))), int(math.sqrt(len(Nl)))))
 
 value_vector =spsolve(BigMat, one)
 error_vector = copy(value_vector)[0:len(Nl)]

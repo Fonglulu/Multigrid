@@ -368,7 +368,7 @@ def NotIn_triangle(node1, node2, node3, data):
     return (s< 0.0 or  t< 0.0 or ((1.-s-t)< 0.0))
 
 
-def NIn_triangle(node1, node2, node3, data):
+def In_triangle(node1, node2, node3, data):
     
     basis1 = set_polynomial_linear_2D(node1, node2, node3)
                     
@@ -552,39 +552,44 @@ def build_matrix_fem_2D(grid, tri_integrate1, tri_integrate2, tri_integrate3, X,
 ############################################################################### 
 ###############################################################################
     #Store A matrix for whole grid nodes        
-#    for tri in triangle_iterator(grid):
-#        
-#    
-#    
-#        if (tri[1].get_node_id() < tri[2].get_node_id()) :
-#            
-#            basis1 = set_polynomial_linear_2D(tri[0], tri[1], tri[2])
-#            
-#            basis2 = set_polynomial_linear_2D(tri[1], tri[0], tri[2])
-#            
-#            basis3 = set_polynomial_linear_2D(tri[2], tri[1], tri[0])
-#            
-#    
-#            
-#            for i in Coord:
-#            
-#                if NIn_triangle(tri[0] , tri[1], tri[2], i):
-#                
-#                
-#                        ii = basis1.eval(i[0], i[1]) * basis1.eval(i[0], i[1])
-#                        
-#                        sum_Aentry(grid, tri[0], tri[0], ii)
-#            
-#                        ij = basis1.eval(i[0], i[1]) * basis2.eval(i[0], i[1])
-#                        
-#                        sum_Aentry(grid, tri[0], tri[1], ij)
-#                        
-#                        ik = basis1.eval(i[0], i[1]) * basis3.eval(i[0], i[1])
-#                        
-#                        sum_Aentry(grid, tri[0], tri[2], ik)
+    for tri in triangle_iterator(grid):
+        
+    
+    
+        if (tri[1].get_node_id() < tri[2].get_node_id()) :
+            
+           # print type(tri[0].get_node_id()), tri[1].get_node_id(),tri[2].get_node_id(),'dasd'
+            
+            basis1 = set_polynomial_linear_2D(tri[0], tri[1], tri[2])
+            
+            basis2 = set_polynomial_linear_2D(tri[1], tri[0], tri[2])
+            
+            basis3 = set_polynomial_linear_2D(tri[2], tri[1], tri[0])
+            
+    
+            
+            for i in Coord:
+                
+                if In_triangle(tri[0] , tri[1], tri[2], i):
+                
+                        #print i, 'coord of data'
+                        ii = basis1.eval(i[0], i[1]) * basis1.eval(i[0], i[1])
+                        #print ii, 'eva at the data'
+                        sum_Aentry(grid, tri[0], tri[0], ii)
+            
+                        ij = basis1.eval(i[0], i[1]) * basis2.eval(i[0], i[1])
+                        
+                        sum_Aentry(grid, tri[0], tri[1], ij)
+                        
+                        ik = basis1.eval(i[0], i[1]) * basis3.eval(i[0], i[1])
+                        
+                        sum_Aentry(grid, tri[0], tri[2], ik)
+                        
+                  
+            
 ############################################################################### 
 ###############################################################################
-#                        
+                        
     
 #    Nl=[]
 #    for node in (not_slave_node(grid)):

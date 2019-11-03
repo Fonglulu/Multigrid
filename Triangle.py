@@ -8,7 +8,7 @@ This class defines an iterator that extracts the triangles in a grid
 """
 
 # Import appropriate information from other classes
-from grid.NodeTable import node_iterator
+from grid.NodeTable import node_iterator,not_slave_node
 from grid.EdgeTable import endpt_iterator
 
     
@@ -66,7 +66,6 @@ def triangle_iterator(grid):
         
                       
                     
-                    
 def Interior_triangle_iterator(grid):
     
     """Iterate over the interior triangles in a grid"""
@@ -106,5 +105,4 @@ def Interior_triangle_iterator(grid):
      
                         # Then return the triangle
                         yield [node, node1, node2]
-        
     

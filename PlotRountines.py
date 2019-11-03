@@ -27,11 +27,11 @@ def smoother_plot(u):
     # Get the spacing, for example, 5 nodes on side yields the spacing h =1/4
     h=1/float(xdim-1)
     
-    x1, y1 = np.meshgrid(np.arange(0, 1+h, h), np.arange(0, 1+h, h))
+    x1, y1 = np.meshgrid(np.arange(h, 1, h), np.arange(h, 1, h))
     
-    true_u = Linear(x1,y1)
+    true_u = Xlinear(x1,y1)
     
-    error = u[0] - true_u
+    error = u[1][1:-1,1:-1]- true_u
     ax.plot_surface(x1, y1, error ,cmap='viridis',linewidth=0)
 
     

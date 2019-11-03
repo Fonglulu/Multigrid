@@ -16,9 +16,9 @@ from scipy.io import mmio
 import os
 
 print(os.getcwd())
-
-os.chdir('/Users/shilu')
-print(os.getcwd())
+#
+#os.chdir('/home/shilu')
+#print(os.getcwd())
 #B162 = mmio.mmread("smdsurv162.mtx").tocsc()
 A40520 = mmio.mmread('smdsurv40520.mtx').tocsc()
 Atilde = mmio.mmread("modsurv40520.mtx").tocsc()

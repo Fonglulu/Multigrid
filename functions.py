@@ -11,7 +11,7 @@ from numpy import  pi, sin, cos, exp
 
 def sin_soln(x,y):
     """Define the function sin(pi x_0)sin(pi x_1)"""
-    return sin(33*pi*x)*sin(33*pi*y)+sin(pi*x)*sin(pi*y)
+    return sin(15*pi*x)*sin(15*pi*y)+sin(pi*x)*sin(pi*y)
 
 def cos_sin(x, y):
     """Define the function pi cos(pi x_1)sin(pi y_1)"""
@@ -49,28 +49,11 @@ def XYcos2(x,y):
     
     return (8*0.000000001*pi**2)*cos(2*pi*x)*cos(2*pi*y)
 
-def plain(x,y):
-    
-    return x-x+1
+
 
 def Zero(x,y):
     
     return x-x
-
-def Linear_x(x,y):
-    
-    return 2*x+y
-
-def Xlinear_x(x,y):
-    
-    return x-x+2
-
-def Ylinear_x(x,y):
-    
-    return x-x+1
-    
-
-
 
 def Linear(x,y):
     
@@ -78,10 +61,24 @@ def Linear(x,y):
 
 def Xlinear(x,y):
     
-    return x-x+1.0
-    
+    return x-x+1
 
 def Ylinear(x,y):
+    
+    return x-x+1
+    
+
+
+def Linear2x(x,y):
+    
+    return 2*x+y
+
+def Xlinear2x(x,y):
+    
+    return x-x+2.0
+    
+
+def Ylinear2x(x,y):
     
     return y-y+1.0
 

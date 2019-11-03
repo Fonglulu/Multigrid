@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sun Nov 18 13:18:14 2018
-
 @author: shilu
 """
 
@@ -248,20 +247,5 @@ def Rich(u, rhs,alpha):
 
 
 
-#from mpl_toolkits.mplot3d import Axes3D
-#import matplotlib.pyplot as plt
-#
-#fig = plt.figure()
-#ax = fig.add_subplot(111, projection='3d')
-#
-#ax.plot_surface(x1,y1, testu[2])
-#
-#ax.set_xlabel('X Label')
-#ax.set_ylabel('Y Label')
-#ax.set_zlabel('Z Label')
-#
-#plt.show()
-#
-#    
-#    
-    
+
+

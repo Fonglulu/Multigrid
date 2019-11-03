@@ -1,18 +1,12 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
-Created on Tue Aug  7 19:35:25 2018
-
+Created on Sat Jul 27 16:25:28 2019
+hello
 @author: shilu
 """
 
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Jul 10 19:44:03 2018
 
-@author: shilu
-"""
 import timeit
 import numpy as np
 from numpy import  pi, sin, cos, exp, inf
@@ -34,56 +28,202 @@ from grid.NodeTable import node_iterator, not_slave_node
 from grid.ConnectTable import connect_iterator 
 
 from BuildSquare import build_square_grid_matrix
-from grid.function.FunctionStore import zero, exp_soln, exp_rhs, sin_soln, sin_rhs, linear, plain, l2, l3, sin4, exy, cos2
+from grid.function.FunctionStore import zero, exp_soln, exp_rhs, sin_soln, sin_rhs, linear, plain, l2, l3, sin4, exy, cos2, linear_x
 import matplotlib.pyplot as plt
-
+from matplotlib.mlab import bivariate_normal
 from mpl_toolkits.mplot3d import Axes3D
 
 from PlotPackman import plot_fem_grid
 from operator import itemgetter
 from copy import copy
-from functions import Linear, Xlinear, Ylinear, Zero, Exy, Xexy, Yexy, XYexy, Cube, Xcube, Ycube, XYcube
+
+
+alpha = 1e-3
 
 
 
 
-alpha =1e-3
+def Linear_x(x,y):
+    
+    return 2*x+y
+
+def Xlinear_x(x,y):
+    
+    return x-x+2
+
+def Ylinear_x(x,y):
+    
+    return x-x+1
+    
 
 
-x = np.linspace(0, 1.0,50)
-y = np.linspace(0, 1.0,50)
+def Linear(x,y):
+    
+    return x+y
+
+def Plain(x,y):
+    
+    return x-x+1
+
+def L2(x,y):
+    
+    return x**2 + y**2
+
+def Zero(x,y):
+    
+    return x-x
+
+
+def Xlinear(x,y):
+    
+    return x-x+1
+    
+
+def Ylinear(x,y):
+    
+    return x-x+1
+
+def x_2(x,y):
+    
+    return 2*x
+
+def y_2(x,y):
+    
+    return 2*y
+
+def w_l2(x,y):
+    
+    return -2
+
+def Sin(x,y):
+    
+    return sin(pi*x)*sin(pi*y)
+
+def Xsin(x,y):
+    
+    return pi*cos(pi*x)*sin(pi*y)
+
+def Ysin(x,y):
+    
+    return pi*cos(pi*y)*sin(pi*x)
+
+def XYsin(x,y):
+    
+    return -(alpha *pi*pi* cos(pi*x)*cos(pi*y))
+
+def L3(x,y):
+    
+    return x**3 + y**3
+
+def x_3(x,y):
+    
+    return 3*x**2
+
+
+def y_3(x,y):
+    
+    return 3*y**2 
+
+def XYl_3(x,y):
+    
+     return -6*alpha*(x+y)
+ 
+    
+def Exy(x,y):
+    return exp(3/((x-0.5)**2+(y-0.5)**2+1))
+
+
+def Xexy(x,y):
+    return -6 * exp(3/((x-0.5)**2+(y-0.5)**2+1))*(-0.5+y)/((x-0.5)**2+(y-0.5)**2+1)**2
+    
+def Yexy(x,y):
+    return -6 * exp(3/((x-0.5)**2+(y-0.5)**2+1))*(-0.5+x)/((x-0.5)**2+(y-0.5)**2+1)**2
+    
+def XYexy(x,y):
+    
+    return -alpha*(36 * exp(3/((x-0.5)**2+(y-0.5)**2+1))*(-0.5+x)**2/((x-0.5)**2+(y-0.5)**2+1)**4+ \
+           24 * exp(3/((x-0.5)**2+(y-0.5)**2+1))*(-0.5+x)**2/((x-0.5)**2+(y-0.5)**2+1)**3-\
+           12 * exp(3/((x-0.5)**2+(y-0.5)**2+1))/((x-0.5)**2+(y-0.5)**2+1)**2+\
+           36 * exp(3/((x-0.5)**2+(y-0.5)**2+1))*(-0.5+y)**2/((x-0.5)**2+(y-0.5)**2+1)**4+\
+           24 * exp(3/((x-0.5)**2+(y-0.5)**2+1))*(-0.5+y)**2/((x-0.5)**2+(y-0.5)**2+1)**3)
+    
+    
+def Cos2(x,y):
+    
+    return cos(2*pi*x)*cos(2*pi*y)
+
+def Xcos2(x,y):
+    
+    return -2*pi*cos(2*pi*y)*sin(2*pi*x)
+
+def Ycos2(x,y):
+    
+    return -2*pi*cos(2*pi*x)*sin(2*pi*y)
+
+def XYcos2(x,y):
+    
+    return (8*alpha*pi**2)*cos(2*pi*x)*cos(2*pi*y)
+           
+
+    
+
+
+
+#bone  = np.loadtxt(r"/Users/shilu/Desktop/SPline/FEM_tut_coding/triangle/bone.txt")
+
+#Create grid and multivariate normal
+x = np.linspace(0, 1.0,20)
+y = np.linspace(0, 1.0,20)
+
 X, Y = np.meshgrid(x,y)
 
-Z2 = Cube(X,Y)
+Z2 = Linear_x(X,Y)
 
+##Make a 3D plot
+#fig = plt.figure()
+#ax = fig.gca(projection='3d')
+#ax.plot_surface(X, Y, Z2,cmap='viridis',linewidth=0)
+#ax.set_xlabel('X axis')
+#ax.set_ylabel('Y axis')
+#ax.set_zlabel('Z axis')
+#plt.show()
+##
 
 data = Z2.flatten()
 coordx = X.flatten()
 coordy = Y.flatten()
 Coord = zip(coordx, coordy)
 
+#data = bone[:,2]
+#coordx = bone[:,0]
+#coordy = bone[:,1]
+#Coord=zip(coordx, coordy)
 
+
+##############################################################################
+##############################################################################
 
 grid = Grid()
-
+#
+## Build a 9*9 grid
 i =4
 n = 2**i+1
 
 h =1/float(n-1)
 
-x1, y1 = np.meshgrid(np.arange(0, 1-h, h), np.arange(0, 1-h, h))
 
-
+#
 true_soln = zero
 #
+
 # Boundares
-Crhs = Cube
+Crhs = Linear_x
 #
-g1rhs = Xcube
+g1rhs = Xlinear_x
 #
-g2rhs = Ycube
+g2rhs = Ylinear_x
 #
-wrhs = XYcube
+wrhs = Zero
 #
 #
 #
@@ -108,6 +248,10 @@ Nl=[node[0] for node in Nl]
         
 for node in Nl:
     node.set_value(Nl.index(node))
+
+        
+#
+
 
 
 # Generate Amatrix
@@ -138,21 +282,16 @@ def Amatrix(grid):
             
             idi = int(node.get_value())
             
-            #print idi, node.get_coord()
-
-            
             #print node.get_value(), node.get_node_id()._id_no
             
             for endpt in connect_iterator(grid, node.get_node_id()):
                 
                 idj = int(grid.get_value(endpt))
                 
-                #print idj, grid.get_coord(endpt)
-                
                 #print endpt._id_no, grid.get_value(endpt)
                 
                 aentry = grid.get_matrix_value(node.get_node_id(), endpt)[1]
-
+                
                 #print aentry
                 
                 if not grid.get_slave(endpt):
@@ -216,7 +355,28 @@ def h1(grid, Crhs, wrhs):
                     
                     w = wrhs(coord[0], coord[1])
 
-                                        
+                    
+
+                    
+#                    if (grid.get_value(endpt) - node.get_value()) == 0:
+#                        
+#                        h1[i] += c * h**2* 6/float(12) + w * 4
+#                        
+#                        
+#                    elif abs(grid.get_value(endpt) -node.get_value()) ==1:
+#                        
+#                        h1[i] += c * h ** 2 /float(12) + w * (-1)
+#                        
+#                    elif abs(grid.get_value(endpt) -node.get_value()) == int(math.sqrt(len(Nl))):
+#                        (
+#                        h1[i] += c * h **2 /float(12) + w * (-1)
+#                        
+#                    elif abs(grid.get_value(endpt) -node.get_value()) == int(math.sqrt(len(Nl))) + 1:
+#                        
+#                        h1[i] += c * h**2 /float(12)
+                    
+                    
+                    
                     #print aentry
                     
                     lentry = grid.get_matrix_value(node.get_node_id(), endpt)[0]
@@ -275,7 +435,8 @@ def h2(grid, g1rhs, wrhs, alpha):
                     #print g1
                     
                     w = wrhs(coord[0], coord[1])
-
+                    
+                    print  #w
                     
                     #print endpt._id_no
             
@@ -402,22 +563,21 @@ def h4(grid, Crhs, g1rhs, g2rhs):
                     
                     g2 = g2rhs(coord[0], coord[1])
                     
-                    #print c
-                    
-                    #print endpt._id_no
-            
+
                     lentry = grid.get_matrix_value(node.get_node_id(), endpt)[0]
                     
                     g1entry = grid.get_matrix_value(node.get_node_id(), endpt)[2]
                     
                     g2entry = grid.get_matrix_value(node.get_node_id(), endpt)[3]
                     
-                    #print aentry
-                    
                     
             
                     #h4[i] += c* lentry + g1entry * g1  + g2entry * g2 # G1, G2
                     h4[i] += c* lentry - g1entry * g1  - g2entry * g2 # -G1, -G2
+                    
+                    if i == 6:
+                        
+                         print h4[6], (coord[0], coord[1]), 'c', c, 'lentry', lentry, 'g1', g1, 'g1entry', g1entry, 'g2entry', g2entry, 'g2', g2
                     
                     #print h4
                     
@@ -469,9 +629,10 @@ def Lmatrix(grid):
 Lmatrix = Lmatrix(grid).todense()              
 
                 
-#Generate G1 matrix
+# Generate G1 matrix
 def G1(grid):
-
+    
+    #build_matrix_fem_2D(grid, Poisson_tri_integrate, TPS_tri_intergrateX, TPS_tri_intergrateY,  X, Y)
     
     Nl=[]
     for node in (not_slave_node(grid)):
@@ -487,7 +648,6 @@ def G1(grid):
     
     
     
-    
     G1 = csr_matrix((len(Nl), len(Nl)))
     
     for node in node_iterator(grid):
@@ -497,13 +657,11 @@ def G1(grid):
             
             # Which row corresponds to the current node?
             i = int(node.get_value())
-            #print node.get_coord(), i
         
             for endpt1 in connect_iterator(grid, node.get_node_id()):
     
                     # Which column corresponds to the current node?
                     j = int(grid.get_value(endpt1))
-                    #print  j
                     
                     # What is the corresponding matrix value (in the FEM grid)
                     g1 = grid.get_matrix_value(node.get_node_id(), endpt1)[2] 
@@ -514,63 +672,6 @@ def G1(grid):
     return G1
 
 G1 = G1(grid).todense()
-
-#def FD_G1(grid):
-#    
-#    Nl=[]
-#    
-#    for node in (not_slave_node(grid)):
-#        
-#        Nl.append([node,node.get_node_id()])
-#        
-#    Nl=sorted(Nl, key = itemgetter(1))
-#    
-#    Nl=[node[0] for node in Nl]
-#    
-#    h = 1/float(math.sqrt(len(Nl))+1)
-#    
-#    G1 = csr_matrix((len(Nl), len(Nl)))
-#    
-#    for node in Nl:
-#        
-#        node.set_value(Nl.index(node))
-#        
-#    for node in node_iterator(grid):
-#        
-#        if not node.get_slave():
-#            
-#            i = int(node.get_value())
-#            
-#            for endpt1 in connect_iterator(grid, node.get_node_id()):
-#                
-#                j = int(grid.get_value(endpt1))
-#                
-#                if not grid.get_slave(endpt1):
-#                    
-#                    if i-j == 0:
-#                        
-#                        G1[i,j] = -2*h
-#                        
-#                    elif abs(i -j) == np.sqrt(len(Nl)):
-#                        
-#                        #print i,j , '-1'
-#                        
-#                        G1[i,j] = h
-#                        
-#                        #print G1[i,j]
-#        
-#        
-#    return G1
-#
-##
-#G1 = FD_G1(grid).todense()
-
-        
-    
-    
-
-
-
 
 # Generate G2 matrix
     
@@ -620,60 +721,7 @@ def G2(grid):
 
 
 G2 = G2(grid).todense()
-
-#def FD_G2(grid):
-#    
-#    Nl=[]
-#    
-#    for node in (not_slave_node(grid)):
-#        
-#        Nl.append([node,node.get_node_id()])
-#        
-#    Nl=sorted(Nl, key = itemgetter(1))
-#    
-#    Nl=[node[0] for node in Nl]
-#    
-#    h = 1/float(math.sqrt(len(Nl))+1)
-#    
-#    G2 = csr_matrix((len(Nl), len(Nl)))
-#    
-#    
-#    
-#    for node in Nl:
-#        
-#        node.set_value(Nl.index(node))
-#        
-#    for node in node_iterator(grid):
-#        
-#        if not node.get_slave():
-#            
-#            i = int(node.get_value())
-#            
-#            for endpt1 in connect_iterator(grid, node.get_node_id()):
-#                
-#                j = int(grid.get_value(endpt1))
-#                
-#                if not grid.get_slave(endpt1):
-#                    
-#                    if i-j == 0:
-#                        
-#                        G2[i,j] = -2*h
-#                        
-#                    elif abs(i -j) == 1:
-#                        
-#                        #print i,j , '-1'
-#                        
-#                        G2[i,j] = h
-#                        
-#                        #print G2[i,j]
-#        
-#        
-#    return G2
-
-#
-#G2 = FD_G2(grid).todense()
-
-
+#print LA.cond(G2.todense())
 
                 
                 
@@ -726,10 +774,9 @@ def dvector(grid, data):
 dvector = dvector(grid, data)
 
 
-rhs_d = dvector - h1
-##
-#
-#
+#dvector1 = dvector - h1
+
+
 def Lets_Make_the_Damn_Big_Matrix():
     
     Nl=[]
@@ -743,106 +790,32 @@ def Lets_Make_the_Damn_Big_Matrix():
     
     ZeroMatrix = csr_matrix((len(Nl),len(Nl)))
     
-    BigMat = bmat([[Amatrix, ZeroMatrix, ZeroMatrix, math.sqrt(alpha)*Lmatrix],\
-                       [ZeroMatrix, Lmatrix, ZeroMatrix, -G1.T],\
-                       [ZeroMatrix, ZeroMatrix, Lmatrix,  -G2.T],\
-                       [math.sqrt(alpha)*Lmatrix, -G1, -G2, ZeroMatrix]])
+    BigMat = bmat([[Amatrix, ZeroMatrix, ZeroMatrix, Lmatrix],\
+                       [ZeroMatrix, alpha*Lmatrix, ZeroMatrix, -G1.T],\
+                       [ZeroMatrix, ZeroMatrix, alpha*Lmatrix,  -G2.T],\
+                       [Lmatrix, -G1, -G2, ZeroMatrix]])
     return BigMat
     
-FEBigMat = Lets_Make_the_Damn_Big_Matrix().todense()
-#print BigMat
-
-Identity = np.identity(4*len(Nl))
-
-
-
-
-#diag =np.diag(PD_BigMat)
+BigMat = Lets_Make_the_Damn_Big_Matrix()
+#print LA.cond(BigMat.todense())
 #
-#inv_diag = np.asarray([1/float(k) for k in diag])
+#w,v=LA.eig(BigMat.todense().T* BigMat.todense())
+#print 'max', max(w), 'min' ,min(w)
 #
-#
-#Diagonal = np.diag(inv_diag)
-#
-#Diagonal = np.sqrt(Diagonal)
-#
-#PrePD_BigMat = Diagonal* PD_BigMat * Diagonal
+#wmin = w.argmax()
+#vmin = v[:,wmin]
+#vmin=vmin.real
+#vmin=vmin[0:len(Nl)]
+#x_a = range(len(Nl))
+#plt.plot(x_a,vmin)
 
+one = zeros((4*len(Nl),1))
+one[0:len(Nl)]=dvector-h1
+one[len(Nl):2*len(Nl)]=-h2
+one[2*len(Nl):3*len(Nl)]=-h3
+one[3*len(Nl):4*len(Nl)]=-h4
 
-
-
-
-
-
-def plot_eigen(matrix, ind, nodenum, x1, y1):
-    """ eigenvector corresponding to a given index, from big to small
-    """
-    
-    eigenvalue, eigenvector = LA.eig(matrix)
-    print 'max', max(Leigenvalue), 'min', min(Leigenvalue), 'cond', LA.cond(Lmatrix)
-    
-    eigvalue = abs(Leigenvalue)
-    eigvalue = eigvalue.tolist()
-    
-    # Find the index of the smallest eigvalue
-    Aeigvalue = eigvalue.index(sorted(eigvalue, rever = True)[ind])
-    
-    Aeigvector = eigenvector[:, Aeigvalue]
-    Aeigvector = Aeigvector[0: nodenum]
-    Aeigvector = np.reshape(Aeigvector, (np.sqrt(nodenum), np.sqrt(nodenum)))
-    
-    ax = Axes3D(plt.gcf())
-    ax.plot_surface(x1,y1, Aeigvector)
-    
-    
-        #w eigenvalues, v eigenvectors
-    Leigenvalue,Leigvector=LA.eigh(FEPD_BigMat)
-    #eigvector, eigvalue, vh=np.linalg.svd(Amatrix)
-    print 'max', max(Leigenvalue), 'min', min(Leigenvalue), 'cond', LA.cond(FEPD_BigMat)
-    
-    
-    Leigvalue=abs(Leigenvalue)
-    Leigvalue=Leigvalue.tolist()
-    
-    
-    #print  'min' , min(abs(eigvalue))
-    
-    # Return the indices of the max value along an axis.
-    
-    Lmaxeigvalue = Leigvalue.index(sorted(Leigvalue, reverse= True)[-1])
-    
-    # Find the eigenvector corresponding to max eigenvalue
-    Lmaxeigvector = Leigvector[:,Lmaxeigvalue]
-    
-    
-    # Take the real component 
-    
-    
-    #Take the section of eigenvector for c
-    Lmaxeigvector=Lmaxeigvector[len(Nl):2*len(Nl)]
-    
-    
-    Lmaxeigvector = np.reshape(Lmaxeigvector, (int(np.sqrt(len(Nl))), int(np.sqrt(len(Nl)))))
-    
-    
-    
-    
-    ax = Axes3D(plt.gcf())
-    
-    ax.plot_surface(x1,y1, Lmaxeigvector)
-    
-    pass
-    
-
-
-
-rhs = zeros([4*len(Nl),1])
-rhs[0:len(Nl)]=rhs_d
-rhs[len(Nl):2*len(Nl)]=-h2/float(math.sqrt(alpha))
-rhs[2*len(Nl):3*len(Nl)]=-h3/float(math.sqrt(alpha))
-rhs[3*len(Nl):4*len(Nl)]=-math.sqrt(alpha)*h4
-
-value_vector =spsolve(FEBigMat, rhs)
+value_vector =spsolve(BigMat, one)
 error_vector = copy(value_vector)[0:len(Nl)]
 
 
@@ -861,7 +834,7 @@ for node in node_iterator(grid):
 
         value = value_vector[i]
         coord = node.get_coord()
-        error_vector[i] = error_vector[i]-l3(coord)
+        error_vector[i] = error_vector[i]-linear_x(coord)
         #print value
         
         #print value
@@ -874,11 +847,11 @@ for node in node_iterator(grid):
         
     # If the node is a slave node, its value should be given by the boundary condition
     else:
-        node.set_value(Cube(node.get_coord()[0],node.get_coord()[1]))
-        
-
-print "Error norm :", linalg.norm(error_vector)*h
-    
+        node.set_value(linear_x(node.get_coord()))
+#        
+#
+#print "Error norm :", linalg.norm(error_vector)*h
+#    
   
 
 def plot_fem_solution(grid):
@@ -952,14 +925,17 @@ def plot_fem_solution(grid):
     show()
 
 plot_fem_solution(grid)
+        
+        
+#timeit.timeit('plot_fem_solution(grid)')    
+##    
+##
+#            
 
-
-
-
-
-
-
-
+#
+#
+#
+#
 
 
 
