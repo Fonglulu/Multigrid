@@ -6,7 +6,7 @@ Created on Fri May 10 14:46:38 2019
 @author: shilu
 """
 
-import timeit
+import time
 import inspect
 import numpy as np
 import scipy 
@@ -17,9 +17,10 @@ import os
 from scipy.sparse.linalg import spsolve,inv
 from scipy.sparse.linalg import LinearOperator
 from scipy import *
-from Uniform_LinearOperator import Setup_LinearOperators, S_Preconditioner
+#from Uniform_LinearOperator import Setup_LinearOperators, S_Preconditioner
 from UniformTest import Setup_Matrices, Setup_Rhs
 from MG_Precon import multigrid_matvec, pre_multigrid
+from functions import Exy, Xexy, Yexy, XYexy
 #from MG_uniform import rhs
 
 #print(os.getcwd())
@@ -45,7 +46,7 @@ from MG_Precon import multigrid_matvec, pre_multigrid
 
 
 
-maxIterations = 1000
+maxIterations = 20
 iterSpace = np.linspace(0,maxIterations,num=maxIterations)
 residualVector = np.array([])
 sparseResidual= []
@@ -116,7 +117,7 @@ def preCondition1(A):
 
 
 
-def Left_preCondition(P):
+def Left_Precondition(P):
     M_x = lambda x: spsolve(P, x)
     rM_x = lambda x: spsolve(P.T, x)
     M =  LinearOperator(P.shape, matvec= M_x, rmatvec= rM_x)
@@ -127,48 +128,55 @@ def conjGradError(A):
     b=np.ones(A.shape[0])
     return np.linalg.norm(b-A*QMR(A,preCondition(A),0)[0])/np.linalg.norm(b)
 
-#
-#alpha = 1
-#i = 5
-#fem = Setup_LinearOperators(i,alpha)
-#pre_fem = Setup_Matrices(alpha, i, 'FDM')[1]
-#n = 2**i-1
-#b=np.ones(pre_fem.shape[0])
 
-#u_MG = QMR(fem, rhs_int_list,  pre_multigrid(n), preCondition(np.identity(4*n**2)))
-#u_precond = QMR(fem, b, preCondition1(pre_fem), preCondition(np.identity(4*n**2)))
-#u_precond = np.reshape(u_precond[0], (4,n,n))
-#u_direct = QMR(fem, rhs_int_list, preCondition(np.identity(4*n**2)), preCondition(np.identity(4*n**2)))
-#u_direct = np.reshape(u_direct[0], (4,n,n))
-
-#print 'START'
-#fem = Setup_LinearOperators(5,alpha)
-#print 'FINISH'
-#
-#print 'START'
-#pre_fem = S_Preconditioner(6,1e-09)
-#print 'FINISH'
-
-
-#b= np.array([[(i) for i in range(pre_fem_ini.shape[0])]]).T
-#b = np.array([i for i in range(pre_fem_ini.shape[0])])
-#b=np.ones(pre_fem_ini.shape[0])
-#x0 = spsolve(pre_fem_ini, b)
-
-#fem = Setup_Matrices(1, 5, 'FEM')
-#pre_fem = Setup_Matrices(alpha, 5, 'FDM')
-
-
-
-
-def plot_residual(alpha,i, grid_type):
+#@profile
+def plot_residual(alpha,i, num_data, grid_type):
     
     global residualVector
     from numpy import linalg as LA
     import numpy as np
+    import sys
     from numpy.linalg import inv
     from PlotRountines import smoother_plot
+    from Triangle_Matrices import h_boundary, Preconditioner, A_connection, Amatrix
+    from Uniform_LinearOperator import Setup_LinearOperator
+    from PreProcess import pre_processing
     
+    start = time.time()
+    grid = pre_processing(i,num_data)
+    print 'done grid'
+    
+    A_global = A_connection(grid,i, num_data)
+    
+    print 'done A_global'
+    
+    d= Amatrix(grid, i, num_data)[-1]
+    
+    print 'done d'
+
+    b = h_boundary(grid, A_global,d, i,num_data, Exy, Xexy, Yexy, XYexy,alpha)
+    
+    print 'done b'
+    
+
+    del d, A_global
+    
+    Ama = Amatrix(grid, i,num_data)[0]
+    
+    print 'done Ama'
+    
+    fem = Setup_LinearOperator(Ama, i,num_data, alpha)
+    
+    print 'done fem'
+    
+    pre_fem = Preconditioner(grid, Ama, i,num_data,alpha)
+    
+    print 'done pre_fem'
+    
+    del Ama, grid
+    done = time.time()
+    elapsed = done - start
+    print(elapsed)
     
     
     residualVector = np.array([])
@@ -179,60 +187,35 @@ def plot_residual(alpha,i, grid_type):
     else:
         
         n= 2**i-2
-    #fem = Setup_LinearOperators(i,alpha)
-    fem = Setup_Matrices(alpha, i, 'FEM')[0]
-    
-    pre_fem = Setup_Matrices(alpha, i, 'FDM')[0]
-    
-    #pre_fem_ini = Setup_Matrices(1,i, 'FEM')[0]
 
+
+#####################################################################################
+#    fem = Setup_Matrices(alpha, i, 'FEM')[0]
+#    pre_fem = Setup_Matrices(alpha, i, 'FDM')[0]
+#    b=Setup_Rhs(alpha,i)[0]
+#    u_direct = spsolve(fem, b) 
+#    u_direct = np.reshape(u_direct[0:n**2], (n,n))    
+#    approx_plot(u_direct) 
+#    print LA.cond(np.matmul(np.matrix(inv(pre_fem)), np.matrix(fem))), fem.shape[0], b.shape[0]
+######################################################################################
+        
+        
+#    fem = Setup_LinearOperator(i,num_data, alpha)
+#    pre_fem = Preconditioner(grid, Ama, i,num_data,alpha)
+#    b = h_boundary(grid, A_global,d, i,num_data, Exy, Xexy, Yexy, XYexy,alpha)
     
 
-    
-    b=Setup_Rhs(alpha,i)[0]
-    
-    #b_ini = Setup_Rhs(1,i)
-    
-    
-    #ini = spsolve(pre_fem_ini, b_ini)
-#    ini_plot = np.reshape(ini[0:n**2], (n,n))
-#    approx_plot(ini_plot)
-    
-    
-    
-    u_direct = spsolve(fem, b)
-    
-    
-    
-    u_direct = np.reshape(u_direct[0:n**2], (n,n))
-    
-    approx_plot(u_direct) 
-
-    
-    #print LA.cond(np.matmul(np.matrix(inv(pre_fem)), np.matrix(fem))), fem.shape[0], b.shape[0]
 
     #pre_multigrid(n)
     #QMR(fem, pre_multigrid(n), preCondition(np.identity(4*n**2)))
     u = QMR(fem,b,  preCondition1(pre_fem), preCondition1(np.identity(4*n**2)))
 
-    #QMR(femSmatrix2, preCondition1(Smatrix2),preCondition(np.identity(femSmatrix2.shape[0])),1)
     u = np.reshape(u[0][0:n**2], (n,n))
          
     approx_plot(u)                                         
                                                     
-                                                    
-    #QMR(femSmatrix5_A, Left_preCondition(Smatrix5_A),preCondition(np.identity(femSmatrix5_A.shape[0])),1)
-    #QMR(femSmatrix_D_sparse, Left_preCondition(Smatrix5_D_sparse), preCondition(np.identity(Smatrix5_A.shape[0])),1)
-    #QMR(femSmatrix5, Left_preCondition(Smatrix5), preCondition(np.identity(femSmatrix5.shape[0])),1)
-    #QMR(femSmatrix3_C, Left_preCondition(Smatrix3_C),preCondition(np.identity(femSmatrix3_C.shape[0])),1)
     i = 0
-#                                                        
-#    print len(residualVector)
-#    while (len(residualVector) < maxIterations):
-#        residualVector = np.append(residualVector,0)
-#        i += 1
-#                                                            
-#        print i
+
     print residualVector, len(residualVector)
     plt.figure(1)
     plt.title('QMR Residual Plot for alpha =1e-9')
@@ -283,3 +266,6 @@ def approx_plot(u):
     
     plt.show()    
     
+#if __name__ == '__main__':
+#    plot_residual(1e-8,6,150,'odd')
+#    

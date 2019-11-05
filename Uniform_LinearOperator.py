@@ -12,46 +12,6 @@ from scipy.sparse import csr_matrix, bmat
 from scipy import eye
 
 
-def Av(v):
-    
-    """ one dimensional vector -> two dimensional -> one dimensional """
-    # number of interior nodes
-    size = len(v)
-    
-    #print size
-    
-    # length of the interior grid
-    length = int(np.sqrt(size))
-    
-    # Convert to two dimensional grid
-    dim2_v = np.reshape(v, (length, length))
-    
-    # length of the entir grid
-    outer_length = length+2
-    
-    h = 1/float(outer_length-1)
-    
-    # Set a dumpy whole grid
-    dim2_u = np.zeros((outer_length, outer_length))
-    
-    dim2_u[1:-1,1:-1] = dim2_v
-    
-    new_v = np.zeros((outer_length, outer_length))
-    
-    for i in range(1, new_v.shape[0]-1):
-        
-        for j in range(1, new_v.shape[0]-1):
-            
-            new_v[i,j] = (6*dim2_u[i,j] + dim2_u[i,j+1]+ dim2_u[i,j-1] + dim2_u[i-1,j] + dim2_u[i+1, j] + dim2_u[i+1,j+1] + dim2_u[i-1,j-1])*(h**2)/float(12)
-            
-    assert new_v[0,0]==0, \
-            "A stencil did not work on node table properly"
-            
-    new_v = np.reshape(new_v[1:-1,1:-1], (length**2,1))
-    
-    
-    
-    return new_v
 
 
 
@@ -293,40 +253,65 @@ def Sv(v):
     
     
     return new_v
-    
-  
-    
+##    
+#  
+#    
     
     
     
     
 
 
-def Setup_LinearOperators(i, alpha):
+#def Setup_LinearOperators(i, alpha):
+#    
+#  
+#    global A_LinearOperator, L_LinearOperator, G1_LinearOperator, G2_LinearOperator, beta
+#    
+#    beta =alpha 
+#    
+#    n = 2**i+1
+#    
+#    
+#    h =1/float(n-1)
+#
+#    _value = np.zeros((4,n-2,n-2))
+#    
+#    int_c = np.zeros(((n-2)**2, (n-2)**2))
+#    
+#    print int_c.shape
+#    
+#    int_g1 = np.zeros(((n-2)**2, (n-2)**2))
+#    
+#    int_g2 = np.zeros(((n-2)**2, (n-2)**2))
+#    
+#    int_w = np.zeros(((n-2)**2, (n-2)**2))
+#    
+#    A_LinearOperator = LinearOperator(int_c.shape, matvec = Av, rmatvec = Av)
+#    
+#    L_LinearOperator = LinearOperator(int_c.shape, matvec = Lv, rmatvec = Lv)
+#    
+#    G1_LinearOperator = LinearOperator(int_c.shape, matvec = G1v, rmatvec = G1Tv)
+#    
+#    G2_LinearOperator = LinearOperator(int_c.shape, matvec = G2v, rmatvec = G2Tv)
+#    
+#    S_LinearOperator = LinearOperator(tuple(4*x for  x in int_c.shape), matvec = Sv, rmatvec = Sv)
+#    
+#    
+# 
+#    return S_LinearOperator
+
+
+
+def Setup_LinearOperator(Amatrix, i,num_data, alpha):
     
-  
-    global A_LinearOperator, L_LinearOperator, G1_LinearOperator, G2_LinearOperator, beta
-    
-    beta =alpha 
+#    from Triangle_Matrices import Amatrix
+#    
+#    A = Amatrix(i, num_data)[0]
+   
     
     n = 2**i+1
     
-    
-    h =1/float(n-1)
-
-    _value = np.zeros((4,n-2,n-2))
-    
     int_c = np.zeros(((n-2)**2, (n-2)**2))
-    
-    print int_c.shape
-    
-    int_g1 = np.zeros(((n-2)**2, (n-2)**2))
-    
-    int_g2 = np.zeros(((n-2)**2, (n-2)**2))
-    
-    int_w = np.zeros(((n-2)**2, (n-2)**2))
-    
-    A_LinearOperator = LinearOperator(int_c.shape, matvec = Av, rmatvec = Av)
     
     L_LinearOperator = LinearOperator(int_c.shape, matvec = Lv, rmatvec = Lv)
     
@@ -334,15 +319,26 @@ def Setup_LinearOperators(i, alpha):
     
     G2_LinearOperator = LinearOperator(int_c.shape, matvec = G2v, rmatvec = G2Tv)
     
-    S_LinearOperator = LinearOperator(tuple(4*x for  x in int_c.shape), matvec = Sv, rmatvec = Sv)
+    def Sv(v):
+        
+  
+        size = int(len(v)/float(4))
+        
+        new_v = np.zeros(v.shape[0])
+       
+        new_v[0:size] = Amatrix.dot(v[0:size]) + np.sqrt(alpha)*L_LinearOperator.matvec(v[3*size:])
+
+        new_v[size: 2*size] =  L_LinearOperator.matvec(v[size:2*size]) + G1_LinearOperator.matvec(v[3*size:])
     
+        new_v[2*size: 3*size] =  L_LinearOperator.matvec(v[2*size : 3*size]) + G2_LinearOperator.matvec(v[3*size:])
     
- 
+        new_v[3*size:] = np.sqrt(alpha)*L_LinearOperator.matvec(v[0:size]) -G1_LinearOperator.matvec(v[size:2*size]) - G2_LinearOperator.matvec(v[2*size:3*size])
+        
+        
+        return new_v
+    S_LinearOperator = LinearOperator(tuple(4*x for  x in int_c.shape), matvec =Sv, rmatvec =Sv)
+    
     return S_LinearOperator
-
-
-
-
 
 def negh(n,  idi):
     

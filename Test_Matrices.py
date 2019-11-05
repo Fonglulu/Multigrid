@@ -339,7 +339,7 @@ def dv(grid, data, Nl, Coord):
 
 
                
-    dvector = np.zeros([len(Nl),1])
+    dvector = np.zeros((len(Nl),))
     
     for tri in Interior_triangle_iterator(grid):
         
@@ -357,7 +357,7 @@ def dv(grid, data, Nl, Coord):
 #                        print tri[0]._coord , tri[1]._coord, tri[2]._coord, Coord[i]
 #                        print Idi, i, data[i], 'd1_data'
                         
-                        dvector[Idi,0] += basis1.eval(Coord[i][0], Coord[i][1]) * data[i]
+                        dvector[Idi] += basis1.eval(Coord[i][0], Coord[i][1]) * data[i]
                         
                         
                     
@@ -372,7 +372,7 @@ def h1_bd(grid, Crhs, wrhs, alpha, Nl, Coord):
     
     
     
-    h1 = np.zeros((len(Nl), 1))
+    h1 = np.zeros((len(Nl), ))
         
     
     for node in not_slave_node(grid):
@@ -410,7 +410,7 @@ def h1_bd(grid, Crhs, wrhs, alpha, Nl, Coord):
                     lentry = grid.get_matrix_value(node.get_node_id(), endpt)[0]
             
                     aentry = grid.get_matrix_value(node.get_node_id(), endpt)[1]/float(len(Coord))
-                    print node.get_node_id()._id_no, endpt._id_no, aentry, c
+#                    print node.get_node_id()._id_no, endpt._id_no, aentry, c
                     h1[i] += c* aentry + w * lentry
                     
                     
@@ -422,7 +422,7 @@ def h2_bd(grid, g1rhs, wrhs, alpha, Nl):
 
     
     
-    h2= np.zeros([len(Nl), 1])
+    h2= np.zeros((len(Nl), ))
     
     for node in not_slave_node(grid):
         
@@ -475,7 +475,7 @@ def h3_bd(grid, g2rhs, wrhs, alpha, Nl):#    Nl = 0
 
     
     
-    h3= np.zeros([len(Nl), 1])
+    h3= np.zeros((len(Nl),))
     
     for node in not_slave_node(grid):
         
@@ -517,7 +517,7 @@ def h4_bd(grid, Crhs, g1rhs, g2rhs, Nl):
 
     
     
-    h4 = np.zeros([len(Nl),1])
+    h4 = np.zeros((len(Nl),))
     
     for node in not_slave_node(grid):
     

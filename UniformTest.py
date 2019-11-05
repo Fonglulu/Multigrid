@@ -45,8 +45,8 @@ def Setup_Grid(i):
     global grid, Coord, Nl,  h, Crhs, g1rhs, g2rhs, wrhs, data, intx, inty,nodes,quick_d
 
 
-    x = np.linspace(0, 1.0,10)
-    y = np.linspace(0, 1.0,10)
+    x = np.linspace(0, 1.0,50)
+    y = np.linspace(0, 1.0,50)
     X, Y = np.meshgrid(x,y)
     
     Z2 =Exy(X,Y)
@@ -125,7 +125,7 @@ def Setup_Grid(i):
     
     
 #    Nl = 0
-#    ms of the time and effort Sam and me putting into making workshop materials. We decide to talk to admin to have additional wages. Can you support us for the case
+
 #    for node in node_iterator(grid):
 #        
 #        if not node.get_slave():
@@ -224,7 +224,7 @@ def Setup_Matrices(alpha, i, discretisation):
 
 
     
-    return   S_sym, S.todense(), Stoke.todense(), Test.todense(), Ama
+    return   S_sym, S.todense(), Stoke.todense(), Test.todense(),Lma
 
 
 def Setup_Rhs(alpha,i):
@@ -241,14 +241,14 @@ def Setup_Rhs(alpha,i):
     d  = dv(grid, data, Nl, Coord)
     
     
-    rhs = zeros([4*len(Nl),1])
+    rhs = zeros((4*len(Nl),))
     rhs[0:len(Nl)] = d - h1
     rhs[len(Nl):2*len(Nl)] = -h2/float(math.sqrt(alpha))
     rhs[2*len(Nl):3*len(Nl)] = -h3/float(math.sqrt(alpha))
     rhs[3*len(Nl):] = -h4*float(math.sqrt(alpha))
     
     
-    rhs_test = zeros([4*len(Nl),1])
+    rhs_test = zeros((4*len(Nl),))
     rhs_test[0:len(Nl)] =  d
     rhs_test[len(Nl):2*len(Nl)] = -h2
     rhs_test[2*len(Nl):3*len(Nl)] = -h3
@@ -257,7 +257,7 @@ def Setup_Rhs(alpha,i):
     
     
     
-    return rhs,rhs_test,h3
+    return rhs,rhs_test,h4
     
     
 

@@ -173,7 +173,7 @@ def pre_processing(i, num_data):
     coordy = Y.flatten()
     Coord = zip(coordx, coordy)
     
-    count =0
+
     for i in range(len(Coord)):
 
  
