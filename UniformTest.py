@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
 Created on Thu Apr 25 15:11:17 2019
@@ -8,7 +8,7 @@ Created on Thu Apr 25 15:11:17 2019
 import timeit
 import numpy as np
 from numpy import  pi, sin, cos, exp, inf
-from scipy import zeros, linalg
+from scipy import zeros, linalg, sparse
 from scipy.sparse import csc_matrix, lil_matrix, bmat, coo_matrix, csr_matrix
 from scipy.sparse.linalg import spsolve
 from numpy import linalg as LA
@@ -70,11 +70,7 @@ def Setup_Grid(i):
     x1, y1 = np.meshgrid(np.arange(0, 1+h, h), np.arange(0, 1+h, h))
     nodes = np.vstack([x1.ravel(), y1.ravel()]).T
     
-#    quick_d = dvector(Coord, data, nodes, n)/float(len(Coord))
-#    
-#    quick_d = np.reshape(quick_d, (n,n))[1:-1,1:-1]
-#    
-#    quick_d = np.reshape(quick_d, ((n-2)**2, 1))
+
     
     true_soln = zero
     
@@ -170,10 +166,10 @@ def Setup_Matrices(alpha, i, discretisation):
     else:
         
         print 'G1-START'
-        G1ma = FD_G1(grid, Nl, h).todense()
+        G1ma = FD_G1(grid, Nl, h)#.todense()
         print 'G1-FINISH'
         print 'G2-START'
-        G2ma = FD_G2(grid, Nl, h).todense()
+        G2ma = FD_G2(grid, Nl, h)#.todense()
         print 'G2-FINISH'
         
     #ZeroMatrix = csr_matrix((len(Nl),len(Nl)))
@@ -181,10 +177,10 @@ def Setup_Matrices(alpha, i, discretisation):
     #G1ma = ZeroMatrix
     #G2ma = ZeroMatrix
     
-    
-    S_sym = bmat([[Ama, None, None,  math.sqrt(alpha)*Lma],\
-                        [None, Lma, None, -G1ma.T],\
-                        [None, None, Lma,  -G2ma.T],\
+#    h**2*sparse.identity(len(Nl),format='csr')
+    S_sym = bmat([[ Ama, None, None,  math.sqrt(alpha)*Lma],\
+                        [None,  Lma, None, -G1ma.T],\
+                        [None, None,Lma,  -G2ma.T],\
                         [ math.sqrt(alpha)*Lma, -G1ma, -G2ma, None]])
     
     S_constraint = bmat([[np.diag(np.diag(Ama)), None, None,  math.sqrt(alpha)*Lma],\
@@ -192,12 +188,22 @@ def Setup_Matrices(alpha, i, discretisation):
                         [None, None, np.diag(np.diag(Lma)),  -G2ma.T],\
                         [ math.sqrt(alpha)*Lma, -G1ma, -G2ma, None]])
     
+    S_swap = bmat([[ math.sqrt(alpha)*Lma, -G1ma, -G2ma,  None],\
+                        [None,  Lma, None, -G1ma.T],\
+                        [None, None, Lma,  -G2ma.T],\
+                        [ Ama, None, None,  math.sqrt(alpha)*Lma]])
     
     
-    S_diag = bmat([[math.sqrt(alpha)*Lma, -G1ma, -G2ma, None],\
-                       [None, Lma, None, -G1ma.T],\
-                       [None, None, Lma,  -G2ma.T],\
-                       [Ama, None, None, math.sqrt(alpha)*Lma]])
+    S_sta = bmat([[Ama, None, None,  math.sqrt(alpha)*Lma],\
+                        [None,  Lma, None, -G1ma.T],\
+                        [None, None, Lma,  -G2ma.T],\
+                        [ math.sqrt(alpha)*Lma, -G1ma, -G2ma, h**2*sparse.identity(len(Nl),format='csr')]])
+    
+    S_sta_swap = bmat([[ math.sqrt(alpha)*Lma, -G1ma, -G2ma,  1/(h**2)*sparse.identity(len(Nl),format='csr')],\
+                        [None,  Lma, None, -G1ma.T],\
+                        [None, None, Lma,  -G2ma.T],\
+                        [ Ama, None, None,  math.sqrt(alpha)*Lma]])
+    
     
 
     
@@ -206,25 +212,35 @@ def Setup_Matrices(alpha, i, discretisation):
                         [None, None, Lma,  -G2ma.T],\
                         [ None, -G1ma, -G2ma, None]])
     
-    Stoke = bmat([[Lma, None, -G1ma.T],\
-                        [ None, Lma,  -G2ma.T],\
-                        [  -G1ma, -G2ma, None]])
+
+    Test = bmat([[Lma, None, None,  -G1ma.T],\
+                        [None, Lma, None, -G2ma.T],\
+                        [-G1ma, -G2ma, np.sqrt(alpha)*Lma,  Ama],\
+                        [  None, None, Ama,   np.sqrt(alpha)*Lma]])
     
-    Test = bmat([[Ama, None, None,  np.identity(Ama.shape[0])],\
-                        [None, Lma, None, -G1ma.T],\
-                        [None, None, Lma,  -G2ma.T],\
-                        [  np.identity(Ama.shape[0]), -G1ma, -G2ma, None]])
+    
+    Stoke = bmat([[ Ama, None, None],\
+                        [ None, Lma,  None],\
+                        [  None, None, Lma]])
+    
+    
+    E = bmat([[ None, -G1ma, -G2ma,  None],\
+                        [None,  None, None, -G1ma.T],\
+                        [None, None, None,  -G2ma.T],\
+                        [ Ama, None, None,  None]])
     
     B = bmat([[math.sqrt(alpha)*Lma, -G1ma, -G2ma, None]])
     
 
     
+
+    
     
 
 
 
     
-    return   S_sym, S.todense(), Stoke.todense(), Test.todense(),Lma
+    return   S_sym, S_swap, S_sta_swap, Ama, Lma, G1ma, G2ma,B, Stoke,E 
 
 
 def Setup_Rhs(alpha,i):
@@ -269,17 +285,22 @@ def Ploteig(precond_matrix, matrix, section):
     from pylab import title
     from numpy.linalg import inv
     from copy import copy
-    
     global Nl
     
-    #Gram = np.matrix(matrix.T)*np.matrix(matrix)
-##    Gram2 =  np.matmul(matrix.T, matrix)
-##    Gram3 = Gram-Gram2
-#                        
-#    Diag =np.diag(Gram)  # Take the diagonal 
-#    Diag =copy(Diag)
-#    
-##    d1 = np.array([1 for i in Diag[0:1*len(Nl)]])
+    Gram = np.matrix(matrix.T)*np.matrix(matrix)
+    precond = np.matrix(precond_matrix.T)*np.matrix(precond_matrix)
+
+    Diag =np.diag(precond_matrix)  # Take the diagonal 
+    Diag =copy(Diag)
+    
+
+    d1 = np.array([1/float(np.sqrt(i)) for i in Diag])
+    
+    Diagonal = np.diag(np.sqrt(d1))
+    
+    scaled_Gram = np.matmul(np.matmul(np.matrix(Diagonal), np.matrix(matrix)), np.matrix(Diagonal))
+    
+#################################################################################################    
 ###    
 ###    Diag[0*len(Nl):1*len(Nl)]=d1
 ##    diag = np.asarray([k for k in Diag])
@@ -294,12 +315,14 @@ def Ploteig(precond_matrix, matrix, section):
 #    precond_Gram = Diagonal* Gram *Diagonal
     
     
-    matrix = np.matmul(np.matrix(inv(precond_matrix)), np.matrix(matrix))
+#    matrix = np.matmul(np.matrix(inv(precond_matrix)), np.matrix(matrix))
     
     #w eigenvalues, v eigenvectors
-    Eigenvalue, Eigenvector=LA.eig(matrix)
+    Eigenvalue, Eigenvector=LA.eig(scaled_Gram)
+    Eigenvalue_scaled_Gram, Eigenvector_scaled_Gram  = LA.eig(scaled_Gram)
     #eigvector, eigvalue, vh=np.linalg.svd(Amatrix)
-    print 'max', max(abs(Eigenvalue)), 'min', min(abs(Eigenvalue)), 'cond', LA.cond(matrix)
+    print 'max', max(Eigenvalue), 'min', min(Eigenvalue), 'cond ', LA.cond(scaled_Gram), LA.cond(matrix),\
+    'max of precond',  max( Eigenvalue_scaled_Gram), 'min of precond', min(Eigenvalue_scaled_Gram)
     
     abs_eigvalue=abs(Eigenvalue)
     abs_eigvalue=abs_eigvalue.tolist()
@@ -323,10 +346,11 @@ def Ploteig(precond_matrix, matrix, section):
 
     
     # Return the position index. reverse gives order from big to small
-    Maxeigvalue = abs_eigvalue.index(sorted(abs_eigvalue, reverse= True)[-2])
+    Maxeigvalue = abs_eigvalue.index(sorted(abs_eigvalue, reverse= False)[0])
     
     # Find the eigenvector corresponding to max eigenvalue
-    Maxeigvector = abs(Eigenvector[:,Maxeigvalue])
+    Maxeigvector =Eigenvector[:,Maxeigvalue]
+#    print LA.norm(Maxeigvector)
 
     Maxeigvector = Maxeigvector.tolist()
     
@@ -347,11 +371,11 @@ def Ploteig(precond_matrix, matrix, section):
         
     elif section == 'g2':
         
-        s=2
+        s= 2
         
     elif section == 'w':
         
-        s=3
+        s= 3
         
     
     # eigenvector plot in 2D for a section
@@ -377,7 +401,80 @@ def Ploteig(precond_matrix, matrix, section):
 
 
 
+def Schur(B, Stoke):
+    
+    from numpy.linalg import inv
+    import matplotlib.pyplot as plt
+    from matplotlib.pyplot import subplots
+    from matplotlib.ticker import LinearLocator, FormatStrFormatter
+    from pylab import title
+    from numpy.linalg import inv
+    from copy import copy
+    
+    global Nl,h
+    
+    print h
+    Schur = np.matmul(np.matmul(np.matrix(B.todense()),np.matrix(inv(Stoke.todense()))), np.matrix(B.T.todense()))
 
+    
+    
+    #w eigenvalues, v eigenvectors
+    Eigenvalue, Eigenvector=LA.eig(Schur)
+    #eigvector, eigvalue, vh=np.linalg.svd(Amatrix)
+    print 'max', max(abs(Eigenvalue)), 'min', min(abs(Eigenvalue)), 'cond', LA.cond(Schur)
+    
+    abs_eigvalue=abs(Eigenvalue)
+    abs_eigvalue=abs_eigvalue.tolist()
+    
+    number = number_of_one(abs_eigvalue)
+    
+    print number
+
+    fig1 = plt.figure(figsize=(10,10))
+    ax1 = fig1.add_subplot(2,1,1)
+    ax1.scatter(range(len(abs_eigvalue)),sorted(abs_eigvalue), s=1)
+    
+    
+    ax2 = fig1.add_subplot(2,1,2)
+    ax2.scatter(Eigenvalue.real, Eigenvalue.imag,s=1)
+    #title('eigenvalue distribution')
+    plt.show()
+    
+    
+ 
+
+    
+    # Return the position index. reverse gives order from big to small
+    Maxeigvalue = abs_eigvalue.index(sorted(abs_eigvalue, reverse= False)[0])
+    
+    # Find the eigenvector corresponding to max eigenvalue
+    Maxeigvector =abs(Eigenvector[:,Maxeigvalue])
+
+    Maxeigvector = Maxeigvector.tolist()
+    
+    # eigenvector plot in 2D
+    plt.scatter(range(len(Maxeigvector)),Maxeigvector, s=1)
+    title('eigenvector plot of assigned eigenvalue')
+    plt.show()
+
+        
+    s = 0
+        
+
+    #Take a section of eigenvector for 
+    Maxeigvector= Maxeigvector[s*len(Nl):(s+1)*len(Nl)]
+    print Maxeigvector[0:10]
+                        
+                    
+                        
+    # eigenvector plot in 3D
+    Maxeigvector = np.reshape(Maxeigvector, (int(np.sqrt(len(Nl))), int(np.sqrt(len(Nl)))))
+                        
+    ax = Axes3D(plt.gcf())
+                            
+    ax.plot_surface(intx,inty, Maxeigvector)  
+    
+    title('Section eigenvector plot of assigned eigenvalue')
 
 
 def number_of_one(v):

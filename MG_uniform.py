@@ -16,7 +16,7 @@ from scipy import eye, zeros, linalg
 from numpy import linalg as LA
 
 
-from functions import Linear, Xlinear, Ylinear, Zero, Exy, Xexy, Yexy, XYexy, Cube, Xcube, Ycube, XYcube, Linear_x, Xlinear_x, Ylinear_x, sin_soln
+from functions import Exy, Xexy, Yexy, XYexy, sin_soln, Linear, Xlinear, Ylinear, Zero
 
 from operator import itemgetter
 
@@ -46,7 +46,7 @@ def VCycle(u,rhs,  s1, s2, alpha):
         
         for sweeps in range(s1):
             
-
+            smoother_plot(u[0])
             u = Rich(u, rhs, alpha)
    
         
@@ -59,15 +59,8 @@ def VCycle(u,rhs,  s1, s2, alpha):
         h = 1/float(rhs1[0].shape[0]-1)
         
         x1, y1 = np.meshgrid(np.arange(0, 1+h, h), np.arange(0, 1+h, h))
+
         
-#        uc[0] = sin_soln(x1,y1)
-#    
-#        uc[1] = sin_soln(x1,y1)
-#    
-#        uc[2] = sin_soln(x1,y1)
-#    
-#        uc[3] = sin_soln(x1,y1)
-#        
         print 'coarse initial'
         #smoother_plot(uc)
         print 'coarse initial'
@@ -214,10 +207,10 @@ def Setup_Grid(i, alpha, matrix_type):
     else:
         
         rhs = np.zeros((4,n,n))
-        rhs[0][1:-1,1:-1] = -np.sqrt(alpha)*h4
+        rhs[3][1:-1,1:-1] = -np.sqrt(alpha)*h4
         rhs[1][1:-1,1:-1] = -h2/float(np.sqrt(alpha))
         rhs[2][1:-1,1:-1] = -h3/float(np.sqrt(alpha))
-        rhs[3][1:-1,1:-1]= dvector-h1
+        rhs[0][1:-1,1:-1]= dvector-h1
 
         
         
@@ -257,8 +250,8 @@ def Ultimate_MG(cyclenumber, i, alpha, matrix_type):
 
 
     # Set the number of relaxation
-    s1=6
-    s2=1
+    s1=3
+    s2=3
 
     #Initialise a list to record l2 norm of resudual 
     rnorm=[np.linalg.norm(residue_sqrt_alpha(rhs, u, alpha)[0])*h] 
@@ -273,6 +266,7 @@ def Ultimate_MG(cyclenumber, i, alpha, matrix_type):
         
     #Plot the semi-log for resiudal and erro r
     convergence_plot(cyclenumber,rnorm)
+    
 
     
 

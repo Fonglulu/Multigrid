@@ -121,7 +121,8 @@ def set_polynomial_linear_2D(node1, node2, node3):
     assert fabs(division) > 1.0E-12, "divide by zero in set_polynomial_linear_2D"
 
     # Find the polynomial coefficients
-    poly = LinearPolynomial()
+    poly = LinearPolynomial() 
+
     poly.set_const((x3*y2 - y3*x2)/division)
     poly.set_x((y3-y2)/division)
     poly.set_y((x2-x3)/division)

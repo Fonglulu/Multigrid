@@ -6,40 +6,47 @@ Created on Sun Mar 24 12:52:45 2019
 @author: shilu
 """
 
-def residue_sqrt_alpha(rhs, u, alpha):
+def residue_sqrt_alpha(rhs, u, alpha, Ama):
     
     """ This routine takes the approximation  of u, computes the residue by
     r=Au-f, where A is the modified version with square root of alpha.
     """
     
     import numpy as np
-    from Rich_uniform import Astencil, G1stencil, G2stencil, Lstencil
+    from MGSmoother import Astencil, G1stencil, G2stencil, Lstencil, G1stencil_T, G2stencil_T
 
     # Get the current size of RHS function
     [xdim,ydim] = rhs[0][1:-1,1:-1].shape
     
     h = 1/ float(xdim+2-1)
+    
+   
 
     
     # Initialise the residual
 
     r=np.zeros((4, rhs.shape[1],rhs.shape[2]))
-    
-    r[0] = rhs[0] - np.sqrt(alpha)*Lstencil(u[0])+ G1stencil(u[1], h) + G2stencil(u[2] ,h)
-    
-    r[1] = rhs[1] - Lstencil(u[1]) - G1stencil(u[3],h)
-    
-    r[2] = rhs[2] - Lstencil(u[2]) - G2stencil(u[3], h)
-    
-    r[3] = rhs[3] - Astencil(u[0], h) - np.sqrt(alpha)* Lstencil(u[3])
-    
-#    r[0] = rhs[0] - Astencil(u[0], h) - np.sqrt(alpha)* Lstencil(u[3])
+#    
+#    r[3] = rhs[3] - np.sqrt(alpha)*Lstencil(u[0])+ G1stencil(u[1], h) + G2stencil(u[2] ,h)
 #    
 #    r[1] = rhs[1] - Lstencil(u[1]) - G1stencil(u[3],h)
 #    
 #    r[2] = rhs[2] - Lstencil(u[2]) - G2stencil(u[3], h)
 #    
-#    r[3] = rhs[3] -  np.sqrt(alpha)*Lstencil(u[0])+ G1stencil(u[1], h) + G2stencil(u[2] ,h)
+#    r[0] = rhs[0] -  np.sqrt(alpha)* Lstencil(u[3]) - Astencil(u[0],h)
+    
+#    r[3][1:-1,1:-1] -= np.reshape(Ama.dot(np.reshape(u[0,1:-1,1:-1], (xdim)**2)), (xdim, ydim))
+    
+    
+    r[0] = rhs[0]  - np.sqrt(alpha)* Lstencil(u[3])
+    
+    r[0][1:-1,1:-1] -= np.reshape(Ama.dot(np.reshape(u[0,1:-1,1:-1], (xdim)**2)), (xdim, ydim))
+    
+    r[1] = rhs[1] - Lstencil(u[1]) + G1stencil_T(u[3],h)
+    
+    r[2] = rhs[2] - Lstencil(u[2]) + G2stencil_T(u[3], h)
+    
+    r[3] = rhs[3] -  np.sqrt(alpha)*Lstencil(u[0])+ G1stencil(u[1], h) + G2stencil(u[2] ,h)
     
 
     

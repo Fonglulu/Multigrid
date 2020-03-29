@@ -51,6 +51,7 @@ def FW_Restriction(uf):
     ynodes = int((ydim+1)/2)
     
     # Set coarse grid
+    print depth, xnodes, ynodes
     uc = np.zeros((depth, xnodes,ynodes))
     
     

@@ -8,9 +8,11 @@ Created on Thu Oct 10 09:07:36 2019
 
 import numpy as np
 from copy import copy
-from functions import Exy, Xexy, Yexy, XYexy
+from functions import Exy, Xexy, Yexy, XYexy, Linear2x
 from copy import deepcopy
 from scipy.sparse import  lil_matrix
+
+
 import time 
 def Numpy_L(n):
     
@@ -149,7 +151,7 @@ class Triangle_table:
 #@profile
 def pre_processing(i, num_data):
     
-    start = time.time()
+#    start = time.time()
     
 
     grid = Triangle_table()
@@ -161,8 +163,8 @@ def pre_processing(i, num_data):
     h =1/float(n-1)
     
     
-    x = np.linspace(0, 1.0,num_data)
-    y = np.linspace(0, 1.0,num_data)
+    x = np.linspace(0, 1.0, num_data)
+    y = np.linspace(0, 1.0, num_data)
     X, Y = np.meshgrid(x,y)
     
     model_func =Exy(X,Y)
@@ -412,8 +414,8 @@ def pre_processing(i, num_data):
         
         dictlist.append(temp)
 
-    done = time.time()
-    elapsed = done - start
+#    done = time.time()
+#    elapsed = done - start
     #print(elapsed)
     return dictlist
             
@@ -594,6 +596,6 @@ def G1matrix(i, num_data):
     
 #
 #if __name__ == '__main__':
-#    pre_processing(9,700)
+#    pre_processing(5,100)
 #        
-        
+#        

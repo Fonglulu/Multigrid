@@ -18,7 +18,7 @@ def smoother_plot(u):
     from functions import Linear, Xlinear, Ylinear, Zero
     
     # Get number of nodes
-    [depth, xdim, ydim] = u.shape
+    [xdim, ydim] = u.shape
     
     fig = plt.figure(figsize=(8,5))
     ax = fig.gca(projection='3d')
@@ -29,10 +29,10 @@ def smoother_plot(u):
     
     x1, y1 = np.meshgrid(np.arange(h, 1, h), np.arange(h, 1, h))
     
-    true_u = Xlinear(x1,y1)
+#    true_u = Xlinear(x1,y1)
     
-    error = u[1][1:-1,1:-1]- true_u
-    ax.plot_surface(x1, y1, error ,cmap='viridis',linewidth=0)
+#    error = u[0][1:-1,1:-1]- true_u
+    ax.plot_surface(x1, y1, u[1:-1,1:-1] ,cmap='viridis',linewidth=0)
 
     
     # Make the ticks looks pretty

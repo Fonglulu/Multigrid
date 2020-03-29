@@ -1,12 +1,10 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
-Created on Sun Nov 18 13:18:14 2018
+Created on Sun Nov 10 13:43:43 2019
+
 @author: shilu
 """
-
-
-
 import numpy as np
 from numpy import  pi, sin, cos, exp, inf
 from scipy.sparse.linalg import spsolve
@@ -84,9 +82,9 @@ def G1stencil(u,h):
             
 
              # correct G1 stencil
-            newu[x,y] = (-2*u[x-1, y]+2*u[x+1,y] - u[x, y+1] + u[x, y-1] - u[x-1, y-1] +u[x+1, y+1])*h/float(6)
+#            newu[x,y] = (-2*u[x-1, y]+2*u[x+1,y] - u[x, y+1] + u[x, y-1] - u[x-1, y-1] +u[x+1, y+1])*h/float(6)
             
-#            newu[x,y] = (-u[x-1, y] +u[x+1,y])*h
+            newu[x,y] = (-u[x-1, y] +u[x+1,y])*h
             
             # linda's version
             #newu[x,y] = (2*u[x,y-1]-2*u[x,y+1] - u[x+1, y] + u[x-1, y] -u[x+1, y+1] + u[x-1, y-1])*h/float(6)
@@ -115,8 +113,8 @@ def G2stencil(u,h):
             
   
             # correct G2 stencil
-            newu[x,y] = (u[x-1,y] - u[x+1,y] +2 * u[x,y+1] -2*u[x,y-1] - u[x-1, y-1] + u[x+1,y+1])*h/float(6)
-#            newu[x,y] = (-u[x,y-1]+u[x,y+1])*h
+#            newu[x,y] = (u[x-1,y] - u[x+1,y] +2 * u[x,y+1] -2*u[x,y-1] - u[x-1, y-1] + u[x+1,y+1])*h/float(6)
+            newu[x,y] = (-u[x,y-1]+u[x,y+1])*h
             
             
             # linda's version
@@ -129,6 +127,43 @@ def G2stencil(u,h):
             
     return newu
             
+
+def G1stencil_T(u,h):
+    
+    """This routine builds the stencil for G1 matrix"""
+    
+    newu  = np.zeros((u.shape[0], u.shape[0]))
+    
+    for x in range(1, u.shape[0]-1):
+        
+        for y in range(1, u.shape[0]-1):
+            
+
+            newu[x,y] = (-u[x, y] +u[x-1,y])*h
+            
+            
+    return newu
+
+
+def G2stencil_T(u,h):
+    
+    """This rountine builds te stencil for G2 matrix"""
+    
+    newu  = np.zeros((u.shape[0], u.shape[0]))
+    
+    for x in range(1, u.shape[0]-1):
+        
+        for y in range(1, u.shape[0]-1):
+            
+
+        
+            newu[x,y] = (-u[x,y]+u[x,y-1])*h
+            
+
+
+            
+    return newu
+
     
     
     
@@ -158,7 +193,7 @@ def TransS2(u,alpha,h):
 
 
 
-def MultS2(u,alpha,h):
+def MultS2(u,alpha,h,Ama):
     
     """ This rountine multiplies a given vector u by the matrix S2, the square 
     root alpha verison matrix.
@@ -185,13 +220,15 @@ def MultS2(u,alpha,h):
 
     newu[3] = np.sqrt(alpha)*Lstencil(u[0]) - G1stencil(u[1], h) - G2stencil(u[2],h)
      
-    newu[1] = Lstencil(u[1]) + G1stencil(u[3],h)
+    newu[1] = Lstencil(u[1]) - G1stencil_T(u[3],h)
      
-    newu[2] = Lstencil(u[2]) + G2stencil(u[3],h)
+    newu[2] = Lstencil(u[2]) - G2stencil_T(u[3],h)
 
-    newu[0] = np.sqrt(alpha)*Lstencil(u[3])  +Astencil(u[0],h)
+#    newu[3] = np.sqrt(alpha)*Lstencil(u[3])  +Astencil(u[0],h)
     
-#    newu[3][1:-1,1:-1] += np.reshape(Ama.dot(np.reshape(u[0,1:-1,1:-1], (u.shape[1]-2)**2)), (u.shape[1]-2, u.shape[2]-2))
+    newu[0] = np.sqrt(alpha)*Lstencil(u[0])
+    
+    newu[0][1:-1,1:-1] += np.reshape(Ama.dot(np.reshape(u[0,1:-1,1:-1], (u.shape[1]-2)**2)), (u.shape[1]-2, u.shape[2]-2))
 
 
 
@@ -215,7 +252,7 @@ def MultS2(u,alpha,h):
 
 
 
-def Rich(u, rhs,alpha):
+def Rich(u, rhs,alpha, Ama):
     
     """ Block Jacobi Method. On each level of grid (same size as initial grid), invoke corresponding matrices
     
@@ -234,7 +271,7 @@ def Rich(u, rhs,alpha):
     
     gamma = 4*[0.1]
     
-    w = 0.01
+    w = 0.3
     
 
     
@@ -243,11 +280,7 @@ def Rich(u, rhs,alpha):
 #    newu = u + w* (TransS2(rhs, alpha, h)- TransS2(MultS2(u,alpha,h),alpha, h))
     
     # The commented out line implements Richardson method on S2 matrix
-    newu = u + w*(rhs - MultS2(u, alpha,h))
+    newu = u + w*(rhs - MultS2(u, alpha,h, Ama))
     
     return newu
-
-
-
-
-
+  

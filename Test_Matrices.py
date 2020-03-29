@@ -226,11 +226,11 @@ def FD_G1(grid, Nl, h):
                     
                     if i-j == 0:
                         
-                        G1[i,j] = 0*-h
+                        G1[i,j] = 1*-h
                         
                     elif i -j == np.sqrt(len(Nl)):
                         
-                        G1[i,j] = -h
+                        G1[i,j] = 0*-h
                         
                     elif i -j == -np.sqrt(len(Nl)):
                         
@@ -315,11 +315,11 @@ def FD_G2(grid, Nl, h):
                     
                     if i-j == 0:
                         
-                        G2[i,j] = 0*-h
+                        G2[i,j] = 1*-h
                         
                     elif i -j == 1:
                         
-                        G2[i,j] = -h
+                        G2[i,j] = 0*-h
                         
                         
 #                    elif abs(i -j) == np.sqrt(len(Nl)):

@@ -82,7 +82,7 @@ def  dvector(Coord, data, nodes,n):
     
     for i in range(len(Coord)):
         
-        print Coord[i]
+    
         
         data_i = data[i]
         data_coord = Coord[i]
@@ -113,7 +113,7 @@ def  dvector(Coord, data, nodes,n):
         # Find the closest node
         #  the index of  smallest distance 
         node1 = node_list[distance.index(sorted(distance)[0])]
-        print node1, 'node1'
+       
         #print distance.index(sorted(distance)[0]), node1, 'node1'
         
         
@@ -126,7 +126,7 @@ def  dvector(Coord, data, nodes,n):
         
         # Find the index of second smallest distance
         node2 = node_list[distance.index(sorted(distance)[1])]
-        print node2, 'node2'
+       
         
         index2 = distance.index(sorted(distance)[1])
         #print distance.index(sorted(distance)[1]), node2, 'node2'
@@ -149,7 +149,7 @@ def  dvector(Coord, data, nodes,n):
         #node_list_2.remove(node2)
         node3 = node_list[distance.index(sorted(distance)[1])]
         #print distance.index(sorted(distance)[1]), node3, 'node3'
-        print node3, 'node3'
+        
         
         IDk = node_list.index(node3)
         #print IDk, 'IDk'
@@ -157,7 +157,7 @@ def  dvector(Coord, data, nodes,n):
         #print node1, node2, node3, Coord[i]
         
         if In_triangle(node1, node2, node3, Coord[i]):
-            print node1, node2, node3
+          
         
             qdvector[IDi,0] += Polynomial_eval(node1, node2, node3, data_coord)* data_i
             

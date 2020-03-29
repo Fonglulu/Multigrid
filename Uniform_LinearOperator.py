@@ -228,33 +228,7 @@ def Lv(v):
     
     
     
-    
 
-def Sv(v):
-    """ Take v as one dimensional vector """
-    
-    
-    size = int(len(v)/float(4))
-    
-    #print Av(v[0:size])+ Lv(v[3*size:])
-    #print v.shape, 'v'
-    new_v = np.zeros(v.shape[0])
-   
-    
-    #length = int(np.sqrt(size))
-    
-    new_v[0:size] = A_LinearOperator.matvec(v[0:size]) + L_LinearOperator.matvec(v[3*size:])
-    
-    new_v[size: 2*size] = np.sqrt(beta)* L_LinearOperator.matvec(v[size:2*size]) + G1_LinearOperator.rmatvec(v[3*size:])
-    
-    new_v[2*size: 3*size] = np.sqrt(beta) * L_LinearOperator.matvec(v[2*size : 3*size]) + G2_LinearOperator.rmatvec(v[3*size:])
-    
-    new_v[3*size:] = L_LinearOperator.matvec(v[0:size]) +G1_LinearOperator.matvec(v[size:2*size]) + G2_LinearOperator.matvec(v[2*size:3*size])
-    
-    
-    return new_v
-##    
-#  
 #    
     
     
@@ -302,22 +276,25 @@ def Sv(v):
 
 
 
-def Setup_LinearOperator(Amatrix, i,num_data, alpha):
+def Setup_LinearOperator(Ama, i,num_data, alpha):
     
 #    from Triangle_Matrices import Amatrix
-#    
-#    A = Amatrix(i, num_data)[0]
-   
+#    from PreProcess import pre_processing
+    
+#    grid = pre_processing(i,num_data)
+#   
+#    Ama = Amatrix(grid, i, num_data)[0]
+#   
     
     n = 2**i+1
     
-    int_c = np.zeros(((n-2)**2, (n-2)**2))
+  
     
-    L_LinearOperator = LinearOperator(int_c.shape, matvec = Lv, rmatvec = Lv)
+    L_LinearOperator = LinearOperator(((n-2)**2, (n-2)**2), matvec = Lv, rmatvec = Lv)
     
-    G1_LinearOperator = LinearOperator(int_c.shape, matvec = G1v, rmatvec = G1Tv)
+    G1_LinearOperator = LinearOperator(((n-2)**2, (n-2)**2), matvec = G1v, rmatvec = G1Tv)
     
-    G2_LinearOperator = LinearOperator(int_c.shape, matvec = G2v, rmatvec = G2Tv)
+    G2_LinearOperator = LinearOperator(((n-2)**2, (n-2)**2), matvec = G2v, rmatvec = G2Tv)
     
     def Sv(v):
         
@@ -326,7 +303,9 @@ def Setup_LinearOperator(Amatrix, i,num_data, alpha):
         
         new_v = np.zeros(v.shape[0])
        
-        new_v[0:size] = Amatrix.dot(v[0:size]) + np.sqrt(alpha)*L_LinearOperator.matvec(v[3*size:])
+        new_v[0:size] = Ama.dot(v[0:size]) + np.sqrt(alpha)*L_LinearOperator.matvec(v[3*size:])
+        
+#        new_v[0:size] = np.sqrt(alpha)*L_LinearOperator.matvec(v[3*size:])
 
         new_v[size: 2*size] =  L_LinearOperator.matvec(v[size:2*size]) + G1_LinearOperator.matvec(v[3*size:])
     
@@ -336,7 +315,7 @@ def Setup_LinearOperator(Amatrix, i,num_data, alpha):
         
         
         return new_v
-    S_LinearOperator = LinearOperator(tuple(4*x for  x in int_c.shape), matvec =Sv, rmatvec =Sv)
+    S_LinearOperator = LinearOperator(tuple(4*x for  x in ((n-2)**2, (n-2)**2)), matvec =Sv, rmatvec =Sv)
     
     return S_LinearOperator
 

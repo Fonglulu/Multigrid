@@ -46,7 +46,7 @@ from functions import Exy, Xexy, Yexy, XYexy
 
 
 
-maxIterations = 20
+maxIterations = 60
 iterSpace = np.linspace(0,maxIterations,num=maxIterations)
 residualVector = np.array([])
 sparseResidual= []
@@ -65,7 +65,7 @@ def Residual (xk):
     residualVector = np.append(residualVector,frame.f_locals['resid'])
 
 
-def QMR(A,b, left_precond,right_precond):
+def QMR(A,b, left_precond,right_precond, solver):
     #b = np.array([i for i in range(A.shape[0])])
     #b= np.array([[(i) for i in range(pre_fem_ini.shape[0])]]).T
     #b=np.ones(A.shape[0])
@@ -78,7 +78,15 @@ def QMR(A,b, left_precond,right_precond):
         #return u
         #
     #else:
-    u = scipy.sparse.linalg.qmr(A,b,  tol=1e-06,  maxiter=maxIterations, M1=left_precond, M2=right_precond ,callback=Residual)
+    
+    if solver == 'qmr':
+        
+        u = scipy.sparse.linalg.qmr(A,b,  tol=1e-06,  maxiter=maxIterations, M1=left_precond, M2=right_precond ,callback=Residual)
+    
+    if solver == 'gmres':
+        
+        u = scipy.sparse.linalg.gmres(A,b,  tol=1e-06,  maxiter=maxIterations, M=left_precond ,callback=Residual)
+        
         
     return u
 
@@ -145,7 +153,7 @@ def plot_residual(alpha,i, num_data, grid_type):
     start = time.time()
     grid = pre_processing(i,num_data)
     print 'done grid'
-    
+#    
     A_global = A_connection(grid,i, num_data)
     
     print 'done A_global'
@@ -154,7 +162,7 @@ def plot_residual(alpha,i, num_data, grid_type):
     
     print 'done d'
 
-    b = h_boundary(grid, A_global,d, i,num_data, Exy, Xexy, Yexy, XYexy,alpha)
+    b = h_boundary(grid, A_global, d, i,num_data, Exy, Xexy, Yexy, XYexy,alpha)
     
     print 'done b'
     
@@ -165,19 +173,21 @@ def plot_residual(alpha,i, num_data, grid_type):
     
     print 'done Ama'
     
-    fem = Setup_LinearOperator(Ama, i,num_data, alpha)
+    fem = Setup_LinearOperator(Ama,i,num_data, alpha)
     
     print 'done fem'
     
-    pre_fem = Preconditioner(grid, Ama, i,num_data,alpha)
+    pre_fem = Preconditioner(grid, i,num_data,alpha)
     
     print 'done pre_fem'
     
-    del Ama, grid
+    del  grid, Ama
     done = time.time()
     elapsed = done - start
     print(elapsed)
     
+
+
     
     residualVector = np.array([])
     
@@ -187,7 +197,9 @@ def plot_residual(alpha,i, num_data, grid_type):
     else:
         
         n= 2**i-2
-
+        
+        
+    identity_sparse = sparse.identity(4*n**2,format='csr')
 
 #####################################################################################
 #    fem = Setup_Matrices(alpha, i, 'FEM')[0]
@@ -197,7 +209,7 @@ def plot_residual(alpha,i, num_data, grid_type):
 #    u_direct = np.reshape(u_direct[0:n**2], (n,n))    
 #    approx_plot(u_direct) 
 #    print LA.cond(np.matmul(np.matrix(inv(pre_fem)), np.matrix(fem))), fem.shape[0], b.shape[0]
-######################################################################################
+####################################anu file##################################################
         
         
 #    fem = Setup_LinearOperator(i,num_data, alpha)
@@ -208,8 +220,15 @@ def plot_residual(alpha,i, num_data, grid_type):
 
     #pre_multigrid(n)
     #QMR(fem, pre_multigrid(n), preCondition(np.identity(4*n**2)))
-    u = QMR(fem,b,  preCondition1(pre_fem), preCondition1(np.identity(4*n**2)))
-
+    start = time.time()
+    print 'start'
+    u = QMR(fem,b,  Left_Precondition(pre_fem), Left_Precondition(identity_sparse), 'qmr')
+    
+    done = time.time()
+    elapsed = done - start
+    print(elapsed)
+    
+    start = time.time()
     u = np.reshape(u[0][0:n**2], (n,n))
          
     approx_plot(u)                                         
@@ -225,6 +244,10 @@ def plot_residual(alpha,i, num_data, grid_type):
     plt.savefig('CondResPlotAtole7.png', format='png', dpi=500)
     plt.show()
     plt.clf()
+    done = time.time()
+    elapsed = done - start
+    print(elapsed)
+    
 
 
 
@@ -247,17 +270,18 @@ def approx_plot(u):
     
     entire_u = np.zeros((xdim+2, ydim+2))
     
-    entire_u[1:-1,1:-1] = u
+#    entire_u[1:-1,1:-1] = u
     
+    u
     
     # Get the spacing, for example, 5 nodes on side yNlields the spacing h =1/4
     h=1/float(xdim+1)
     
-    x1, y1 = np.meshgrid(np.arange(0, 1+h, h), np.arange(0, 1+h, h))
+    x1, y1 = np.meshgrid(np.arange(h, 1, h), np.arange(h, 1, h))
     
 
 
-    ax.plot_surface(x1, y1, entire_u ,cmap='viridis',linewidth=0)
+    ax.plot_surface(x1, y1, u ,cmap='viridis',linewidth=0)
 
     
     # Make the ticks looks pretty
@@ -267,5 +291,5 @@ def approx_plot(u):
     plt.show()    
     
 #if __name__ == '__main__':
-#    plot_residual(1e-8,6,150,'odd')
-#    
+#    plot_residual(1e-8,8,400,'odd')
+    

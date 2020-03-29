@@ -61,14 +61,16 @@ def Coord_to_GlobalId(coord,i):
     return global_id
     
     
-def Preconditioner(grid, Ama, i, num_data,alpha):
+def Preconditioner(grid,  i, num_data,alpha):
+    
+    from scipy import sparse
     
 #    grid = pre_processing(i, num_data)
     n = 2**i +1
     h =1/float(n-1)
     int_n = n-2
     size_L = int_n**2
-#    Ama = Amatrix(i,num_data)[0]
+    Ama = Amatrix(grid, i,num_data)[0]
     preG1 = lil_matrix((int_n**2, int_n**2))
     preG2 = lil_matrix((int_n**2, int_n**2))
     Lma = lil_matrix((int_n**2, int_n**2))
@@ -95,6 +97,13 @@ def Preconditioner(grid, Ama, i, num_data,alpha):
                    Lma[idi, idi] =4
                    Lma[idj, idj] =4
                    Lma[idk, idk] =4
+                   preG1[idi, idi] = -1*h
+                   preG1[idj, idj] = -1*h
+                   preG1[idk, idk] = -1*h
+                   preG2[idi, idi] = -1*h
+                   preG2[idj, idj] = -1*h
+                   preG2[idk, idk] = -1*h
+                   
               
    
                
@@ -102,7 +111,7 @@ def Preconditioner(grid, Ama, i, num_data,alpha):
                     
                        
                        preG2[idi, idj] =1*h
-                       preG2[idj, idi] = -1*h
+#                       preG2[idj, idi] = -1*h
                        
                        Lma[idi, idj] =-1
                        Lma[idj, idi] = -1 
@@ -112,7 +121,7 @@ def Preconditioner(grid, Ama, i, num_data,alpha):
                    if abs(idj-idk) ==1 :
                        
                        preG2[idj,idk] = 1*h
-                       preG2[idk,idj] =  -1*h
+#                       preG2[idk,idj] =  -1*h
                        
                        Lma[idj,idk] =-1
                        Lma[idk,idj] =-1
@@ -120,7 +129,7 @@ def Preconditioner(grid, Ama, i, num_data,alpha):
                    if abs(idi-idj) == int_n:
                
                        preG1[idi, idj] = 1*h
-                       preG1[idj, idi] = -1*h
+#                       preG1[idj, idi] = -1*h
                        
                        Lma[idi, idj] =-1
                        Lma[idj,idi] =-1
@@ -128,17 +137,17 @@ def Preconditioner(grid, Ama, i, num_data,alpha):
                    if abs(idj-idk) == int_n:
                        
                         preG1[idj,idk] =  1*h
-                        preG1[idk, idj] = -1*h
+#                        preG1[idk, idj] = -1*h
                         
                         Lma[idj,idk] = -1
                         Lma[idk, idj] = -1
-                        
+#    h**2* sparse.identity(int_n**2,format='csr')                  
     S_sym = bmat([[Ama, None, None,  np.sqrt(alpha)*Lma],\
                         [None, Lma, None, -preG1.T],\
                         [None, None, Lma,  -preG2.T],\
-                        [ np.sqrt(alpha)*Lma, -preG1, -preG2, None]])
+                        [ np.sqrt(alpha)*Lma, -preG1, -preG2, None]], format = 'csr')
 
-
+#    S_sym.tocsr()
                
     return S_sym
 
@@ -149,7 +158,7 @@ def Preconditioner(grid, Ama, i, num_data,alpha):
     
     
 
-def Amatrix(grid, i, num_data):
+def Amatrix(grid,i, num_data):
  
 #    grid = pre_processing(i, num_data)
 
@@ -259,14 +268,14 @@ def Amatrix(grid, i, num_data):
                   
     return Amatrix/(num_data**2), Dvector/(num_data**2)
 
-
+#@profile
 def A_connection(grid, i, num_data):
-    
+   
 #    start = time.time()
 #    grid = pre_processing(i, num_data)
 #    done = time.time()
 #    elapsed = done - start
-    #print(elapsed)
+#    print(elapsed)
     
     n = 2**i +1
 
@@ -277,8 +286,11 @@ def A_connection(grid, i, num_data):
     Amatrix = lil_matrix((n**2, n**2))
     
 
-
+#    count=0
     for tri in grid:
+        
+#               count+=1
+#               print count
 
 
 
@@ -366,7 +378,7 @@ def A_connection(grid, i, num_data):
 #                    print(elapsed)
                     
                   
-    return Amatrix.todense()/(num_data**2)
+    return Amatrix/(num_data**2)
 
 
 
@@ -376,7 +388,7 @@ def A_connection(grid, i, num_data):
 
     
     
-def h_boundary(grid, A_global, d, i,num_data, Crhs,G1rhs, G2rhs, Wrhs, alpha):
+def h_boundary(grid, A_global, d,i,num_data, Crhs,G1rhs, G2rhs, Wrhs, alpha):
     
     
 #    grid = pre_processing(i, num_data)
@@ -588,7 +600,66 @@ def h_boundary(grid, A_global, d, i,num_data, Crhs,G1rhs, G2rhs, Wrhs, alpha):
     return rhs
 
 
-
-
-
+def Lmatrix(grid, i, num_data):
     
+#    grid = pre_processing(i, num_data)
+    n = 2**i +1
+    
+    int_n = n-2
+    size_L = int_n**2
+    Lmatrix = lil_matrix((int_n**2, int_n**2))
+    
+    count = 0
+    for tri in grid:
+
+               count+=1
+               #print count
+               # node 1 should be the right angle node
+               node1 = tri[0][0]
+               idi = Coord_to_Id(node1,i)
+               
+               node2 = tri[0][1]
+               idj = Coord_to_Id(node2,i)
+              
+               node3 = tri[0][2]       
+               idk = Coord_to_Id(node3,i)
+#               print (node1,node2, node3), (idi, idj, idk), 'tri'
+               
+               if 0<=idi<= size_L and 0<= idj<=size_L and 0<=idk<=size_L:
+#                   print (node1,node2, node3), (idi, idj, idk), 'tri'
+                   Lmatrix[idi, idi] =4
+                   Lmatrix[idj, idj] =4
+                   Lmatrix[idk, idk] =4
+               
+                   if abs(idi-idj) ==1:
+#                       print idi, idj, 'ij'
+                       
+                       Lmatrix[idi, idj] =-1
+                       Lmatrix[idj, idi] = -1 
+                   
+
+                       
+                   if abs(idj-idk) ==1 :
+#                       print idj,idk, 'jk'
+                       Lmatrix[idj,idk] =-1
+                       Lmatrix[idk,idj] =-1
+                       
+                   if abs(idi-idj) == int_n:
+                       
+                       Lmatrix[idi, idj] =-1
+                       Lmatrix[idj,idi] =-1
+                       
+                   if abs(idj-idk) ==int_n:
+                        
+                        Lmatrix[idj,idk] = -1
+                        Lmatrix[idk, idj] = -1
+               
+    return Lmatrix
+
+
+
+
+#
+#if __name__ == '__main__':
+#    A_connection(6,150)
+#        
